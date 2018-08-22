@@ -1,5 +1,6 @@
 from flask import Blueprint,request,jsonify,abort
 from task_manager import manager
+from task import Task
 
 bp=Blueprint('tasks',__name__,url_prefix='/api/v1/tasks')
 
@@ -39,7 +40,10 @@ def top(cnt):
 @bp.route('/',methods=['POST'])
 def post_tasks():
     config=request.json
-    task=Task(config)
+    if isinstance(config,dict):
+        task=Task(**config)
+    else:
+        abort(415)
     if manager.insert(task):
         return jsonify(task)
     else:
@@ -51,6 +55,6 @@ def post_tasks():
 def update_tasks(id_):
     config=request.json
     if manager.update(id_,config):
-        return jsonify(manager.query({'id':id_}))
+        return jsonify(manager.query({'id':id_})[0])
     else:
         abort(406)

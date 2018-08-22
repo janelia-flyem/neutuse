@@ -7,7 +7,7 @@ from database import And,Or,Not,Equal,Greater
 class TaskManager():
 
     def __init__(self):
-        timer=threading.Timer(60,self._routine,[self])
+        timer=threading.Timer(10,self._routine)
         timer.start()
 
     def insert(self,task):
@@ -15,32 +15,30 @@ class TaskManager():
         return db.insert(task)
 
     def query(self,filters):
-        if isinstance(filters,dict):
-            fs=[ Equal(k,filters[k] for k in filters.keys()) ]
-            if len(fs)<1:
-                return []
-            if len(fs)==1:
-                f=fs[0]
-            else:
-                f=fs[0]
-                for i in range(1,len(fs)):
-                    f=And(f,fs[i])
+        fs=[ Equal(k,filters[k]) for k in filters.keys() ]
+        if len(fs)<1:
+            f=[]
         else:
-            f=filters
-        return db.query(filters)
+            f=fs[0]
+            for i in range(1,len(fs)):
+                f=And(f,fs[i])
+        return db.query(f)
 
     def update(self,id_,properties):
         if 'status' in properties:
             properties['last_updated']=time.time()
         return db.update(id_,properties)
 
-    def score(self,task):
-        return 0.0
+    def _score(self,task):
+        rv=task.priority+1/task.last_updated
+        return rv
 
     def _routine(self):
-        tasks=db.query(Equal('status','processing'))
+        tasks=db.query((Equal('status','submitted')))
+        print(tasks)
         for t in tasks:
-            if time.time()-t.last_updated>=t.life_span:
+            if (t.life_span>0) and ((time.time()-t.last_updated)>=t.life_span):
+                print(12345)
                 self.update(t.id,{'status':'failed'})
 
     def top(self,cnt):
@@ -49,7 +47,15 @@ class TaskManager():
         f3=Greater('max_tries',0)
         f=And(Or(f1,f2),f3)
         tasks=db.query(f)
-        scores=[ {'id':task.id,'score':self.score(task)} for task in tasks ]
-        return [ self.query(Equal('id',t['id']) for t in heapq.nlargest(cnt,scores,key=lambda s:s['score'])) ]
+        scores=[ {'id':task.id,'score':self._score(task)} for task in tasks ]
+        rvs=heapq.nlargest(cnt,scores,key=lambda s:s['score'])
+        return [ db.query(Equal('id',t['id']))[0] for t in rvs]
 
 manager=TaskManager()
+
+if __name__=='__main__':
+    tasks=db.query(Equal('name','sss'))
+    print(tasks)
+    print(tasks[0].status)
+    tasks=db.query(Equal('status',tasks[0].status))
+    print(tasks)
