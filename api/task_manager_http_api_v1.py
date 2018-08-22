@@ -1,6 +1,6 @@
 from flask import Blueprint,request,jsonify,abort
-from task_manager import manager
-from task import Task
+from model.task_manager import manager
+from model.task import Task
 
 bp=Blueprint('tasks',__name__,url_prefix='/api/v1/tasks')
 

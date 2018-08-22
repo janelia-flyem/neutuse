@@ -1,73 +1,13 @@
 import json
-from abc import ABCMeta,abstractmethod
 import sqlite3 as sql
-from task import Task
 
-class Filter():
-    pass
+from .base import Base
+from .op import *
 
-
-class And(Filter):
-
-    def __init__(self,a,b):
-        self.a=a
-        self.b=b
-
-
-class Or(Filter):
-    
-    def __init__(self,a,b):
-        self.a=a
-        self.b=b
-
-
-class Greater(Filter):
-    
-    def __init__(self,a,b):
-        self.a=a
-        self.b=b
-
-
-class Equal(Filter):
-    
-    def __init__(self,a,b):
-        self.a=a
-        self.b=b
-
-class Not(Filter):
-    
-    def __init__(self,a):
-        self.a=a
-
-
-class DataBase():
-    
-    __metaclass__=ABCMeta
-
-    def __init__(self):
-        pass
-
-    @abstractmethod
-    def insert(self,task):
-        pass
-
-    @abstractmethod
-    def update(self,id_,properties):
-        pass
-
-    @abstractmethod
-    def query(self,filters):
-        pass
-
-    @abstractmethod
-    def next_available_id(self):
-        pass
-        
-
-class SqliteDataBase(DataBase):
+class Sqlite(Base):
 
     def __init__(self,name,model):
-        super(SqliteDataBase,self).__init__()
+        super(Base,self).__init__()
         self.name=name
         self.model=model
         conn=sql.connect(self.name)
@@ -91,7 +31,7 @@ class SqliteDataBase(DataBase):
         conn.close()
 
     def insert(self,task):
-        conn=sql.connect(self.name,check_same_thread=False)
+        conn=sql.connect(self.name)
         cur=conn.cursor()
         cur.execute('''INSERT INTO task VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)''',
                 (task.id,task.type,task.name,task.description,json.dumps(task.config),task.status,task.priority,
@@ -101,7 +41,7 @@ class SqliteDataBase(DataBase):
         return True
 
     def update(self,id_,properties):
-        conn=sql.connect(self.name,check_same_thread=False)
+        conn=sql.connect(self.name)
         cur=conn.cursor()
         cmd='UPDATE task SET '
         keys=[]
@@ -120,7 +60,7 @@ class SqliteDataBase(DataBase):
         return True
 
     def query(self,filters):
-        conn=sql.connect(self.name,check_same_thread=False)
+        conn=sql.connect(self.name)
         cur=conn.cursor()
         if not filters:
             cmd='SELECT * FROM task'
@@ -136,7 +76,7 @@ class SqliteDataBase(DataBase):
         return rv
 
     def next_available_id(self):
-        conn=sql.connect(self.name,check_same_thread=False)
+        conn=sql.connect(self.name)
         cur=conn.cursor()
         cur.execute('SELECT MAX(id) FROM task')
         rv=cur.fetchone()
@@ -173,7 +113,3 @@ class SqliteDataBase(DataBase):
         else :
             cmd=str(filters)
         return cmd
-
-if __name__=='__main__':
-    db=SqliteDataBase('test.db',Task)
-    db.query(Or(Greater('max_tries',0),Equal('status','processing')))

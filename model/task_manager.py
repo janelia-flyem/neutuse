@@ -2,7 +2,7 @@ import time
 import heapq
 import threading
 from config import db
-from database import And,Or,Not,Equal,Greater
+from storage.op import And,Or,Not,Equal,Greater
 
 class TaskManager():
 
@@ -52,10 +52,3 @@ class TaskManager():
         return [ db.query(Equal('id',t['id']))[0] for t in rvs]
 
 manager=TaskManager()
-
-if __name__=='__main__':
-    tasks=db.query(Equal('name','sss'))
-    print(tasks)
-    print(tasks[0].status)
-    tasks=db.query(Equal('status',tasks[0].status))
-    print(tasks)

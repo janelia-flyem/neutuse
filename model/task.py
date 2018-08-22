@@ -1,7 +1,7 @@
 import os
 import sys
 import time
-from enum import Enum
+
 
 class Task(dict):
 
@@ -49,6 +49,3 @@ class Task(dict):
             raise TypeError(str(name)+' should be type '+str(self.__mapping__[name]['type']))
         raise AttributeError('class Task does not have attribute '+str(name))
 
-if __name__=='__main__':
-    t=Task(name='skl',config={'bodies':[1,2,3]})
-    print(t)

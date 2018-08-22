@@ -1,4 +1,4 @@
-from database import SqliteDataBase
-from task import Task
+from storage.sqlite import Sqlite
+from model.task import Task
 
-db=SqliteDataBase('test.db',Task)
+db=Sqlite('test.db',Task)

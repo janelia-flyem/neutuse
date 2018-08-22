@@ -40,4 +40,7 @@ def test_top():
     print(rv)
 
 if __name__=='__main__':
+    test_create()
+    test_query()
+    test_update()
     test_top()
