@@ -1,8 +1,10 @@
 from flask import Blueprint,request,jsonify,abort
-from model.task_manager import manager
+from model.task_manager import TaskManager
 from model.task import Task
+from config import db
 
 bp=Blueprint('tasks',__name__,url_prefix='/api/v1/tasks')
+manager=TaskManager(db)
 
 #query
 @bp.route('/',methods=['GET'])

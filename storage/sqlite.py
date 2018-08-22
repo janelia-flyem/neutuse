@@ -67,12 +67,12 @@ class Sqlite(Base):
         else:
             cmd='SELECT * FROM task WHERE '
             cmd+=self._filters2sql(filters)
-        print(cmd)
         cur.execute(cmd)
         rv=[]
         for i in cur.fetchall():
             rv.append(self._to_model(i))
         conn.close()
+        print(cmd)
         return rv
 
     def next_available_id(self):
