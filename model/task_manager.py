@@ -5,8 +5,9 @@ from storage.op import And,Or,Not,Equal,Greater
 
 class TaskManager():
 
-    def __init__(self,db):
+    def __init__(self,db,check_interval=10):
         self.db=db
+        self.check_interval=check_interval
         self._check_routine()
         
     def insert(self,task):
@@ -38,7 +39,7 @@ class TaskManager():
             if (t.life_span>0) and ((time.time()-t.last_updated)>=t.life_span):
                 self.update(t.id,{'status':'failed'})
         
-        timer=threading.Timer(10,self._check_routine)
+        timer=threading.Timer(self.check_interval,self._check_routine)
         timer.start()
         
     def top(self,cnt):
