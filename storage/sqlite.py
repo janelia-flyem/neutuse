@@ -35,7 +35,7 @@ class Sqlite(Base):
         cur=conn.cursor()
         cur.execute('''INSERT INTO task VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)''',
                 (task.id,task.type,task.name,task.description,json.dumps(task.config),task.status,task.priority,
-                task.life_span,task.max_tries,task.submitted,task.last_updated,task.comment,task.user))
+                task.life_span,task.max_tries,task.submitted,task.last_updated,json.dumps(task.comment),task.user))
         conn.commit()
         conn.close()
         return True
@@ -72,7 +72,6 @@ class Sqlite(Base):
         for i in cur.fetchall():
             rv.append(self._to_model(i))
         conn.close()
-        print(cmd)
         return rv
 
     def next_available_id(self):
@@ -91,7 +90,7 @@ class Sqlite(Base):
         dct={'id':obj[0],'type':obj[1],'name':obj[2],'description':obj[3],
                 'config':json.loads(obj[4]),'status':obj[5],'priority':obj[6],
                 'life_span':obj[7],'max_tries':obj[8],'submitted':obj[9],
-                'last_updated':obj[10],'comment':obj[11]}
+                'last_updated':obj[10],'comment':json.loads(obj[11])}
         return self.model(**dct)
 
     def _filters2sql(self,filters):

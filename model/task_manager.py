@@ -5,9 +5,11 @@ from storage.op import And,Or,Not,Equal,Greater
 
 class TaskManager():
 
-    def __init__(self,db,check_interval=10):
+    def __init__(self,db,check_interval=10,waiting_time=5,enable_retry=False):
         self.db=db
         self.check_interval=check_interval
+        self.waiting_time=waiting_time
+        self.enable_retry=enable_retry
         self._check_routine()
         
     def insert(self,task):
@@ -34,21 +36,31 @@ class TaskManager():
         return rv
 
     def _check_routine(self):
-        tasks=self.db.query((Equal('status','submitted')))
+        tasks=self.db.query((Equal('status','processing')))
         for t in tasks:
-            if (t.life_span>0) and ((time.time()-t.last_updated)>=t.life_span):
-                self.update(t.id,{'status':'failed'})
+            if time.time()-t.last_updated>=t.life_span:
+                self.update(t.id,{'status':'expired'})
         
+        tasks=self.db.query((Equal('status','waiting')))
+        for t in tasks:
+            if time.time()-t.last_updated>=self.waiting_time:
+                self.update(t.id,{'status':'submitted'})
+
         timer=threading.Timer(self.check_interval,self._check_routine)
         timer.start()
         
-    def top(self,cnt):
-        f1=Equal('status','submitted')
-        f2=Equal('status','failed')
-        f3=Greater('max_tries',0)
-        f=And(Or(f1,f2),f3)
+    def top(self,cnt,type_,name):
+        f=Equal('status','submitted')
+        if self.enbale_retry:
+            f=Or(f,Equal('status','expired'))
+        f=And(f,Greater('max_tries',0))
+        f=And(f,Equal('type',type_))
+        f=And(f,Equal('name',name))
         tasks=self.db.query(f)
         scores=[ {'id':task.id,'score':self._score(task)} for task in tasks ]
         rvs=heapq.nlargest(cnt,scores,key=lambda s:s['score'])
-        return [ self.db.query(Equal('id',t['id']))[0] for t in rvs]
+        tasks=[ self.db.query(Equal('id',t['id']))[0] for t in rvs]
+        for t in tasks:
+            self.update(t.id,{'status':'waiting'})
+        return tasks
 

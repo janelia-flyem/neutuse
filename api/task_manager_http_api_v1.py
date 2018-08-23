@@ -1,10 +1,10 @@
 from flask import Blueprint,request,jsonify,abort
 from model.task_manager import TaskManager
 from model.task import Task
-from config import db,CHECK_INTERVAL
+from config import db,CHECK_INTERVAL,WATING_TIME,ENABLE_RETRY
 
 bp=Blueprint('tasks',__name__)
-manager=TaskManager(db,CHECK_INTERVAL)
+manager=TaskManager(db,CHECK_INTERVAL,WATING_TIME,ENABLE_RETRY)
 
 #query
 @bp.route('/',methods=['GET'])
@@ -33,9 +33,9 @@ def get_tasks_id_property(id_,property_):
         abort(404)
 
 
-@bp.route('/top/<int:cnt>',methods=['GET'])
-def top(cnt):
-    return jsonify(manager.top(cnt))
+@bp.route('/top/<string:type_>/<string:name>/<int:cnt>',methods=['GET'])
+def top(type_,name,cnt):
+    return jsonify(manager.top(cnt,type_,name))
 
 
 #create
@@ -52,11 +52,24 @@ def post_tasks():
         abort(406)
 
 
-#update
-@bp.route('/<int:id_>',methods=['POST'])
-def update_tasks(id_):
-    config=request.json
-    if manager.update(id_,config):
+#update status :processing ,failed or done
+@bp.route('/<int:id_>/status/<string:status>',methods=['POST'])
+def update_status(id_,status):
+    if not status in ('processing','failed','done'):
+        abort(404)
+    if manager.update(id_,{'status':status}):
+        return jsonify(manager.query({'id':id_})[0])
+    else:
+        abort(406)
+        
+#add comment
+@bp.route('/<int:id_>/comment/<string:comment>',methods=['POST'])
+def add_comment(id_,status):
+    task=manager.query({'id':id_})
+    if len(task<1):
+        abort(404)
+    task=task[0]
+    if manager.update(id_,{'comment':task.comment.append(comment)}):
         return jsonify(manager.query({'id':id_})[0])
     else:
         abort(406)

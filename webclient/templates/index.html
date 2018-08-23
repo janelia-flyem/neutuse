@@ -7,21 +7,13 @@
 <script type="text/javascript" src="{{url_for('client.static',filename='js/bootstrap.min.js')}}"></script>
 <script type="text/javascript">
 
-function json2String(json){
-    rv=""
-    $.each(json,function(key,value){
-        rv+=key+":"+value;
-    });
-    return rv;
-};
-
 function update(){
     $.get(" {{server}}api/v1/tasks/",
                 function(result){
                     var date=new Date();
                     var content="<table class='table table-bordered table-hover'>";
                     content+="<thead class='thead-dark'>";
-                    content+="<tr><th>id</th><th>type</th><th>name</th><th>description</th><th>config</th><th>priority</th><th>life_span</th><th>max_tries</th><th>submitted</th><th>last_updated</th><th>comment</th><th>status</th></tr>";
+                    content+="<tr><th>id</th><th>type</th><th>name</th><th>description</th><th>config</th><th>priority</th><th>life_span</th><th>max_tries</th><th>submitted</th><th>last_updated</th><th>status</th><th>comment</th></tr>";
                     content+='</thead>'
                     $.each(result,function(key,value){
                         content+="<tr>";
@@ -29,7 +21,7 @@ function update(){
                         content+="<td>"+value["type"]+"</td>";
                         content+="<td>"+value["name"]+"</td>";
                         content+="<td>"+value["description"]+"</td>";
-                        content+="<td>"+json2String(value["config"])+"</td>";
+                        content+="<td>"+JSON.stringify(value["config"])+"</td>";
                         content+="<td>"+value["priority"]+"</td>";
                         content+="<td>"+value["life_span"]+"</td>";
                         content+="<td>"+value["max_tries"]+"</td>";
@@ -37,8 +29,8 @@ function update(){
                         content+="<td>"+date.toUTCString()+"</td>";
                         date.setTime(value["last_updated"]*1000);
                         content+="<td>"+date.toUTCString()+"</td>";
-                        content+="<td>"+value["comment"]+"</td>";
                         content+="<td>"+value["status"]+"</td>";
+                        content+="<td>"+value["comment"]+"</td>";
                         content+="</tr>";
                         
                     });
@@ -48,6 +40,7 @@ function update(){
     );
 };
 $(document).ready(function(){
+    update();
     setInterval("update()",1000);
 });
 </script>

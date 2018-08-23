@@ -5,20 +5,20 @@ import time
 
 class Task(dict):
 
-    __status__=('submitted','processing','failed','done')
+    __status__=('submitted','waiting','processing','expired','failed','done')
     __mapping__={
         'id':{'type':int,'required':False,'default':0},
         'type':{'type':str,'required':False,'default':'dvid'},
         'name':{'type':str,'required':True},
-        'description':{'type':str,'required':False,'default':''},
+        'description':{'type':str,'required':False,'default':'---'},
         'config':{'type':dict,'required':True},
         'status':{'type':str,'required':False,'default':'submitted'},
         'priority':{'type':int,'required':False,'default':0},
-        'life_span':{'type':float,'required':False,'default':-1},
+        'life_span':{'type':float,'required':False,'default':3600},
         'max_tries':{'type':int,'required':False,'default':1},
         'submitted':{'type':float,'required':False,'default':lambda:time.time()},
         'last_updated':{'type':float,'required':False,'default':lambda:time.time()},
-        'comment':{'type':str,'required':False,'default':''},
+        'comment':{'type':list,'required':False,'default':[]},
         'user':{'type':str,'required':False,'default':'anonymous'}
     }
 
