@@ -1,3 +1,4 @@
+import json
 from flask import Blueprint,request,jsonify,abort
 from model.task_manager import TaskManager
 from model.task import Task
@@ -63,13 +64,16 @@ def update_status(id_,status):
         abort(406)
         
 #add comment
-@bp.route('/<int:id_>/comment/<string:comment>',methods=['POST'])
-def add_comment(id_,status):
+@bp.route('/<int:id_>/comments',methods=['POST'])
+def add_comment(id_):
+    comment=request.json
     task=manager.query({'id':id_})
-    if len(task<1):
+    if len(task)<1:
         abort(404)
     task=task[0]
-    if manager.update(id_,{'comment':task.comment.append(comment)}):
+    comments=task.comment
+    comments.append(str(comment))
+    if manager.update(id_,{'comment':json.dumps(comments)}):
         return jsonify(manager.query({'id':id_})[0])
     else:
         abort(406)

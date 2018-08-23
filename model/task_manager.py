@@ -51,7 +51,7 @@ class TaskManager():
         
     def top(self,cnt,type_,name):
         f=Equal('status','submitted')
-        if self.enbale_retry:
+        if self.enable_retry:
             f=Or(f,Equal('status','expired'))
         f=And(f,Greater('max_tries',0))
         f=And(f,Equal('type',type_))

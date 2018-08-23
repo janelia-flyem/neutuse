@@ -7,9 +7,9 @@ from time import sleep
 def test_create():
     SERVER = 'http://127.0.0.1:5000/api/v1/tasks/'
     HEADERS={'Content-Type':'application/json'}
-    rq.post(SERVER,data=json.dumps({'name':'skl','config':{'bodies':[1,2,3]},'life_span':1}),headers=HEADERS)
-    rq.post(SERVER,data=json.dumps({'name':'asa','config':{'p1':1,'p2':{'p3':4}}}),headers=HEADERS)
-    rq.post(SERVER,data=json.dumps({'name':'asa','config':{'p1':1,'p2':{'p3':'test'}}}),headers=HEADERS)
+    rq.post(SERVER,data=json.dumps({'name':'skeletonization','config':{'bodies':[1,2,3]}}),headers=HEADERS)
+    rq.post(SERVER,data=json.dumps({'name':'skeletonization','config':{'p1':1,'p2':{'p3':4}}}),headers=HEADERS)
+    rq.post(SERVER,data=json.dumps({'name':'skeletonization','config':{'p1':1,'p2':{'p3':'test'}}}),headers=HEADERS)
     rq.post(SERVER,data=json.dumps({'type':'test','life_span':3,'name':'sll','config':{'bodies':[1,2,3]}}),headers=HEADERS)
     rq.post(SERVER,data=json.dumps({'type':'test','life_span':30,'name':'sll','config':{'bodies':[1,2,3]}}),headers=HEADERS)
     rq.post(SERVER,data=json.dumps({'type':'test','life_span':60*10,'name':'sll','config':{'bodies':[1,2,3]}}),headers=HEADERS)
@@ -61,7 +61,7 @@ def test_top():
 
 if __name__=='__main__':
     test_create()
-    test_query()
+    '''test_query()
     test_update()
     #sleep(3)
-    #test_top()
+    #test_top()'''

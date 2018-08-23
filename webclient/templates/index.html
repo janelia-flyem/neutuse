@@ -11,26 +11,26 @@ function update(){
     $.get(" {{server}}api/v1/tasks/",
                 function(result){
                     var date=new Date();
-                    var content="<table class='table table-bordered table-hover'>";
+                    var content="<table class='table table-bordered table-hover' style='table-layout:fixed'>";
                     content+="<thead class='thead-dark'>";
                     content+="<tr><th>id</th><th>type</th><th>name</th><th>description</th><th>config</th><th>priority</th><th>life_span</th><th>max_tries</th><th>submitted</th><th>last_updated</th><th>status</th><th>comment</th></tr>";
                     content+='</thead>'
                     $.each(result,function(key,value){
                         content+="<tr>";
-                        content+="<td>"+value["id"]+"</td>";
-                        content+="<td>"+value["type"]+"</td>";
-                        content+="<td>"+value["name"]+"</td>";
-                        content+="<td>"+value["description"]+"</td>";
-                        content+="<td>"+JSON.stringify(value["config"])+"</td>";
-                        content+="<td>"+value["priority"]+"</td>";
-                        content+="<td>"+value["life_span"]+"</td>";
-                        content+="<td>"+value["max_tries"]+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+value["id"]+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+value["type"]+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+value["name"]+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+value["description"]+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+JSON.stringify(value["config"])+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+value["priority"]+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+value["life_span"]+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+value["max_tries"]+"</td>";
                         date.setTime(value["submitted"]*1000);
-                        content+="<td>"+date.toUTCString()+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+date.toUTCString()+"</td>";
                         date.setTime(value["last_updated"]*1000);
-                        content+="<td>"+date.toUTCString()+"</td>";
-                        content+="<td>"+value["status"]+"</td>";
-                        content+="<td>"+value["comment"]+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+date.toUTCString()+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+value["status"]+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+JSON.stringify(value["comment"])+"</td>";
                         content+="</tr>";
                         
                     });
