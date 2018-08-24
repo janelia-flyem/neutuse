@@ -4,7 +4,7 @@ clean:
 	sudo rm /usr/local/bin/neutuse
 
 install:
-	#conda create --no-default-packages -n neutuse python=3.6 flask requests -y
+	conda create --no-default-packages -n neutuse python=3.6 flask requests -y
 	test -d ${HOME}/.local/share || mkdir ${HOME}/.local/share
 	cp -r neutuse ${HOME}/.local/share/
 	sudo cp neutuse/run.sh /usr/local/bin/neutuse
