@@ -6,3 +6,6 @@ from webclient.client import bp as client_bp
 app=Flask(__name__)
 app.register_blueprint(api_bp,url_prefix='/api/v1/tasks')
 app.register_blueprint(client_bp,url_prefix='/client')
+
+app.run(host='127.0.0.1',port=5000,debug=True)
+
