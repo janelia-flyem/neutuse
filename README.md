@@ -23,8 +23,7 @@ default addr is 127.0.0.1:5000, you can open brower type 127.0.0.1:5000/client t
 ## Run service
 
 neutuse run service {name} [taskmanager_addr]   
-name specify service id   
-Currently, only skeletonize is available   
+Name specifies service id, currently only skeletonize is available   
 Make sure taskmanager is running at taskmanager_addr, default it's 127.0.0.1:5000
 
 ## post tasks
