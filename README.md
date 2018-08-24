@@ -10,7 +10,7 @@ To install conda see https://conda.io/docs/
 
 ## install neutuse
 
-git clone https://github.com/ephemera2015/computing_service.git   
+git clone https://github.com/ephemera2015/neutuse.git   
 cd neutuse   
 make install
 
