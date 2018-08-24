@@ -1,11 +1,27 @@
+import os
+import sys
+
 from flask import Flask
 
-from api.task_manager_http_api_v1 import bp as api_bp
-from webclient.client import bp as client_bp
+from api import task_manager_http_api_v1
+import webclient
+from service import run_service
 
-app=Flask(__name__)
-app.register_blueprint(api_bp,url_prefix='/api/v1/tasks')
-app.register_blueprint(client_bp,url_prefix='/client')
+def run_app(host,port):
+    app = Flask(__name__)
+    webclient.init(host,port)
+    app.register_blueprint(task_manager_http_api_v1.bp,url_prefix='/api/v1/tasks')
+    app.register_blueprint(webclient.bp,url_prefix='/client')
+    app.run(host=host,port=port)
 
-app.run(host='127.0.0.1',port=5000,debug=True)
-
+if __name__ == '__main__':    
+    mode = sys.argv[1]
+    if mode == 'taskmanager':
+        host,port = sys.argv[2].split(':')
+        port = int(port)
+        run_app(host,port)
+    elif mode == 'service':
+        name = sys.argv[2]
+        host,port = sys.argv[3].split(':')
+        port=int(port)
+        run_service(name,host,port)
