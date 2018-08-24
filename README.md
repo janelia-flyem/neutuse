@@ -5,13 +5,14 @@ neutuse is a flexibale computing service frame work.
 # Installation
 ## install conda
 
-Make sure conda is in your system path    
-To install conda see https://conda.io/docs/
+1)Install conda, see https://conda.io/docs/  
+2)conda create -n neutuse
 
 ## install neutuse
 
 git clone https://github.com/ephemera2015/neutuse.git   
-cd neutuse   
+cd neutuse
+source activate neutuse
 make install
 
 # Usage
