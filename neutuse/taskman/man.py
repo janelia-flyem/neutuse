@@ -1,10 +1,8 @@
-import time
-import heapq
 import threading
-from storage.op import And, Or, Not, Equal, Greater
+from .storage.op import *
 
-class TaskManager():
-
+class Man():
+    
     def __init__(self, db, check_interval=10, waiting_time=5, enable_retry=False):
         self.db = db
         self.check_interval = check_interval
@@ -17,7 +15,7 @@ class TaskManager():
         return self.db.insert(task)
 
     def query(self, filters):
-        fs=[ Equal(k, filters[k]) for k in filters.keys() ]
+        fs = [Equal(k, filters[k]) for k in filters.keys()]
         if len(fs) < 1:
             f = []
         else:
@@ -32,7 +30,7 @@ class TaskManager():
         return self.db.update(id_, properties)
 
     def _score(self, task):
-        rv = task.priority + 1/task.last_updated
+        rv = task.priority + 1 / task.last_updated
         return rv
 
     def _check_routine(self):
@@ -63,4 +61,3 @@ class TaskManager():
         for t in tasks:
             self.update(t.id, {'status' : 'waiting'})
         return tasks
-
