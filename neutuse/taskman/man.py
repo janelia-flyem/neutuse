@@ -1,9 +1,14 @@
+import time
 import threading
-from .storage.op import *
+import heapq
+from .task import Task
+from .storage import Base
+from .storage.op import Equal, And, Or, Not, Greater
 
 class Man():
     
     def __init__(self, db, check_interval=10, waiting_time=5, enable_retry=False):
+        assert( isinstance(db, Base) )
         self.db = db
         self.check_interval = check_interval
         self.waiting_time = waiting_time
@@ -11,17 +16,18 @@ class Man():
         self._check_routine()
         
     def insert(self, task):
+        assert( isinstance(task,Task) )
         task.id = self.db.next_available_id()
         return self.db.insert(task)
 
     def query(self, filters):
-        fs = [Equal(k, filters[k]) for k in filters.keys()]
+        fs = [ Equal(k, filters[k]) for k in filters.keys() ]
         if len(fs) < 1:
             f = []
         else:
             f = fs[0]
             for i in range(1, len(fs)):
-                f = And(f,fs[i])
+                f = And(f, fs[i])
         return self.db.query(f)
 
     def update(self, id_, properties):
@@ -55,7 +61,7 @@ class Man():
         f = And(f, Equal('type', type_))
         f = And(f, Equal('name', name))
         tasks = self.db.query(f)
-        scores = [ {'id' : task.id,'score' : self._score(task)} for task in tasks ]
+        scores = [ {'id' : task.id,'score' : self._score(task) } for task in tasks ]
         rvs = heapq.nlargest(cnt, scores,key = lambda s : s['score'])
         tasks = [ self.db.query(Equal('id', t['id']))[0] for t in rvs]
         for t in tasks:

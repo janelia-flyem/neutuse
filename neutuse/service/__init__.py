@@ -1,4 +1,4 @@
-from .skeletonize import Skeletonize 
+from .service import Service
 
 
     

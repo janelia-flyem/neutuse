@@ -7,7 +7,7 @@ from .op import *
 class Sqlite(Base):
 
     def __init__(self, name, model):
-        super(Base, self).__init__()
+        super(Sqlite, self).__init__()
         self.name = name
         self.model = model
         conn = sql.connect(self.name)
@@ -31,50 +31,61 @@ class Sqlite(Base):
         conn.close()
 
     def insert(self, task):
-        conn = sql.connect(self.name)
-        cur = conn.cursor()
-        cur.execute('''INSERT INTO task VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-                (task.id, task.type, task.name, task.description,
-                json.dumps(task.config), task.status,task.priority,
-                task.life_span, task.max_tries, task.submitted, 
-                task.last_updated, json.dumps(task.comment), task.user))
-        conn.commit()
-        conn.close()
+        try:
+            conn = sql.connect(self.name)
+            cur = conn.cursor()
+            cur.execute('''INSERT INTO task VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                    (task.id, task.type, task.name, task.description,
+                    json.dumps(task.config), task.status,task.priority,
+                    task.life_span, task.max_tries, task.submitted, 
+                    task.last_updated, json.dumps(task.comment), task.user))
+            conn.commit()
+            conn.close()
+        except:
+            return False
         return True
 
     def update(self, id_, properties):
-        conn = sql.connect(self.name)
-        cur = conn.cursor()
-        cmd = 'UPDATE task SET '
-        keys = []
-        values = []
-        for k in properties:
-            keys.append(k)
-            values.append(properties[k])
-        for k in keys:
-            cmd += k + '=?,'
-        cmd = cmd[:-1]
-        cmd += ' WHERE id=?'
-        values.append(id_)
-        cur.execute(cmd, values)
-        conn.commit()
-        conn.close()
+        try:
+            if 'id' in properties:
+                return False
+            conn = sql.connect(self.name)
+            cur = conn.cursor()
+            cmd = 'UPDATE task SET '
+            keys = []
+            values = []
+            for k in properties:
+                keys.append(k)
+                values.append(properties[k])
+            for k in keys:
+                cmd += k + '=?,'
+            cmd = cmd[:-1]
+            cmd += ' WHERE id=?'
+            values.append(id_)
+            cur.execute(cmd, values)
+            conn.commit()
+            conn.close()
+        except:
+            return False
         return True
 
     def query(self,filters):
-        conn = sql.connect(self.name)
-        cur = conn.cursor()
-        if not filters:
-            cmd = 'SELECT * FROM task'
-        else:
-            cmd = 'SELECT * FROM task WHERE '
-            cmd += self._filters2sql(filters)
-        cur.execute(cmd)
-        rv = []
-        for i in cur.fetchall():
-            rv.append(self._to_model(i))
-        conn.close()
-        return rv
+        try:
+            conn = sql.connect(self.name)
+            cur = conn.cursor()
+            if not filters:
+                cmd = 'SELECT * FROM task'
+            else:
+                cmd = 'SELECT * FROM task WHERE '
+                cmd += self._filters2sql(filters)
+            cur.execute(cmd)
+            rv = []
+            for i in cur.fetchall():
+                rv.append(self._to_model(i))
+            conn.close()
+            return rv
+        except:
+            return []
 
     def next_available_id(self):
         conn = sql.connect(self.name)

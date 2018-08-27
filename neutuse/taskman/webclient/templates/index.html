@@ -13,11 +13,12 @@ function update(){
                     var date=new Date();
                     var content="<table class='table table-bordered table-hover' style='table-layout:fixed'>";
                     content+="<thead class='thead-dark'>";
-                    content+="<tr><th>id</th><th>type</th><th>name</th><th>description</th><th>config</th><th>priority</th><th>life_span</th><th>max_tries</th><th>submitted</th><th>last_updated</th><th>status</th><th>comment</th></tr>";
+                    content+="<tr><th>id</th><th>user</th><th>type</th><th>name</th><th>description</th><th>config</th><th>priority</th><th>life_span</th><th>max_tries</th><th>submitted</th><th>last_updated</th><th>status</th><th>comment</th></tr>";
                     content+='</thead>'
                     $.each(result,function(key,value){
                         content+="<tr>";
                         content+="<td style='word-wrap:break-word;'>"+value["id"]+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+value["user"]+"</td>";
                         content+="<td style='word-wrap:break-word;'>"+value["type"]+"</td>";
                         content+="<td style='word-wrap:break-word;'>"+value["name"]+"</td>";
                         content+="<td style='word-wrap:break-word;'>"+value["description"]+"</td>";

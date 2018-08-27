@@ -8,11 +8,11 @@ from .man import Man
 
 class TaskMan():
     
-    def __init__(self, host, port, debug):
-        self.host = host
-        self.port = port
-        self.addr = host if host.startswith('http') else 'http://' + host
-        self.addr += ':' + str(port)
+    def __init__(self, addr, debug):
+        self.host, self.port = addr.split(':')
+        self.port = int(self.port)
+        self.addr = addr if addr.startswith('http') else 'http://' + addr
+        
         self.debug = debug
         self._initApp()
         
