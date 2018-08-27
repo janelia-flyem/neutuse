@@ -7,4 +7,4 @@ install:
 	@echo 'neutuse successfully installed at '${CONDA_PREFIX}'/bin/neutuse'
 	@echo 'neutuse --help for help'
  
-.PHONY: install clean
+.PHONY: install
