@@ -3,21 +3,21 @@ from abc import ABCMeta,abstractmethod
 
 class Base():
     
-    __metaclass__=ABCMeta
+    __metaclass__ = ABCMeta
 
     def __init__(self):
         pass
 
     @abstractmethod
-    def insert(self,task):
+    def insert(self, task):
         pass
 
     @abstractmethod
-    def update(self,id_,properties):
+    def update(self, id_, properties):
         pass
 
     @abstractmethod
-    def query(self,filters):
+    def query(self, filters):
         pass
 
     @abstractmethod

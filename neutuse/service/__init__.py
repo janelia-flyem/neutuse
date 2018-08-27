@@ -1,8 +1,8 @@
 from .skeletonize import Skeletonize 
 
-def run_service(name,host,port):
+def run_service(name, host, port):
     if name == 'skeletonize':
         Skeletonize(host,port).run()
     else:
-        print(name+' service has not been supported yet')
+        print(name + ' service has not been supported yet')
     

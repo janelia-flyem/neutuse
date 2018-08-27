@@ -6,11 +6,11 @@ from .op import *
 
 class Sqlite(Base):
 
-    def __init__(self,name,model):
-        super(Base,self).__init__()
-        self.name=name
-        self.model=model
-        conn=sql.connect(self.name)
+    def __init__(self, name, model):
+        super(Base, self).__init__()
+        self.name = name
+        self.model = model
+        conn = sql.connect(self.name)
         conn.execute('''
                         CREATE TABLE IF NOT EXISTS task (
                         id int,
@@ -30,85 +30,88 @@ class Sqlite(Base):
         conn.commit()
         conn.close()
 
-    def insert(self,task):
-        conn=sql.connect(self.name)
-        cur=conn.cursor()
+    def insert(self, task):
+        conn = sql.connect(self.name)
+        cur = conn.cursor()
         cur.execute('''INSERT INTO task VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-                (task.id,task.type,task.name,task.description,json.dumps(task.config),task.status,task.priority,
-                task.life_span,task.max_tries,task.submitted,task.last_updated,json.dumps(task.comment),task.user))
+                (task.id, task.type, task.name, task.description,
+                json.dumps(task.config), task.status,task.priority,
+                task.life_span, task.max_tries, task.submitted, 
+                task.last_updated, json.dumps(task.comment), task.user))
         conn.commit()
         conn.close()
         return True
 
-    def update(self,id_,properties):
-        conn=sql.connect(self.name)
-        cur=conn.cursor()
-        cmd='UPDATE task SET '
-        keys=[]
-        values=[]
+    def update(self, id_, properties):
+        conn = sql.connect(self.name)
+        cur = conn.cursor()
+        cmd = 'UPDATE task SET '
+        keys = []
+        values = []
         for k in properties:
             keys.append(k)
             values.append(properties[k])
         for k in keys:
-            cmd+=k+'=?,'
-        cmd=cmd[:-1]
-        cmd+=' WHERE id=?'
+            cmd += k + '=?,'
+        cmd = cmd[:-1]
+        cmd += ' WHERE id=?'
         values.append(id_)
-        cur.execute(cmd,values)
+        cur.execute(cmd, values)
         conn.commit()
         conn.close()
         return True
 
     def query(self,filters):
-        conn=sql.connect(self.name)
-        cur=conn.cursor()
+        conn = sql.connect(self.name)
+        cur = conn.cursor()
         if not filters:
-            cmd='SELECT * FROM task'
+            cmd = 'SELECT * FROM task'
         else:
-            cmd='SELECT * FROM task WHERE '
-            cmd+=self._filters2sql(filters)
+            cmd = 'SELECT * FROM task WHERE '
+            cmd += self._filters2sql(filters)
         cur.execute(cmd)
-        rv=[]
+        rv = []
         for i in cur.fetchall():
             rv.append(self._to_model(i))
         conn.close()
         return rv
 
     def next_available_id(self):
-        conn=sql.connect(self.name)
-        cur=conn.cursor()
+        conn = sql.connect(self.name)
+        cur = conn.cursor()
         cur.execute('SELECT MAX(id) FROM task')
-        rv=cur.fetchone()
+        rv = cur.fetchone()
         if rv[0] is not None:
-            max_id=rv[0]
+            max_id = rv[0]
         else:
-            max_id=0
+            max_id = 0
         conn.close()
-        return max_id+1
+        return max_id + 1
     
-    def _to_model(self,obj):
-        dct={'id':obj[0],'type':obj[1],'name':obj[2],'description':obj[3],
-                'config':json.loads(obj[4]),'status':obj[5],'priority':obj[6],
-                'life_span':obj[7],'max_tries':obj[8],'submitted':obj[9],
-                'last_updated':obj[10],'comment':json.loads(obj[11])}
+    def _to_model(self, obj):
+        dct = {'id' : obj[0], 'type' : obj[1], 'name' : obj[2],
+                'description' : obj[3], 'config' : json.loads(obj[4]),
+                'status' : obj[5], 'priority' : obj[6], 'life_span' : obj[7],
+                'max_tries' : obj[8], 'submitted' : obj[9],
+                'last_updated' : obj[10], 'comment' : json.loads(obj[11])}
         return self.model(**dct)
 
-    def _filters2sql(self,filters):
+    def _filters2sql(self, filters):
         if isinstance(filters,And):
-            cmd='('+self._filters2sql(filters.a)+') AND ('+self._filters2sql(filters.b)+')'
-        elif isinstance(filters,Or):
-            cmd='('+self._filters2sql(filters.a)+') OR ('+self._filters2sql(filters.b)+')'
+            cmd = '(' + self._filters2sql(filters.a) + ') AND (' + self._filters2sql(filters.b) + ')'
+        elif isinstance(filters, Or):
+            cmd = '(' + self._filters2sql(filters.a) + ') OR (' + self._filters2sql(filters.b) + ')'
         elif isinstance(filters,Equal):
-            cmd=self._filters2sql(filters.a)+' = '
-            if isinstance(filters.b,str):
-                cmd+="'"
-            cmd+=self._filters2sql(filters.b)
-            if isinstance(filters.b,str):
-                cmd+="'"
-        elif isinstance(filters,Greater):
-            cmd=self._filters2sql(filters.a)+' > '+self._filters2sql(filters.b)
-        elif isinstance(filters,Not):
-            cmd=' NOT ('+self._filters2sql(filters.a)+')'
+            cmd = self._filters2sql(filters.a) + ' = '
+            if isinstance(filters.b, str):
+                cmd += "'"
+            cmd += self._filters2sql(filters.b)
+            if isinstance(filters.b, str):
+                cmd += "'"
+        elif isinstance(filters, Greater):
+            cmd = self._filters2sql(filters.a) + ' > ' + self._filters2sql(filters.b)
+        elif isinstance(filters, Not):
+            cmd = ' NOT (' + self._filters2sql(filters.a) + ')'
         else :
-            cmd=str(filters)
+            cmd = str(filters)
         return cmd
