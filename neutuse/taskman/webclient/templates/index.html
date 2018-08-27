@@ -8,19 +8,26 @@
 <script type="text/javascript">
 
 function update(){
-    $.get(" {{config['addr']}}/api/v1/tasks/",
+    var data={};
+    if ($('#type').val()!=''){
+        data['type']=$('#type').val();
+    }
+    if ($('#name').val()!=''){
+        data['name']=$('#name').val();
+    }
+    if ($('#user').val()!=''){
+        data['user']=$('#user').val();
+    }
+    if ($('#status').val()!='all'){
+        data['status']=$('#status').val();
+    }
+    $.get(" {{config['addr']}}/api/v1/tasks/",data,
                 function(result){
                     var date=new Date();
-                    var content="<table class='table table-bordered table-hover' style='table-layout:fixed'>";
-                    content+="<thead class='thead-dark'>";
-                    content+="<tr><th>id</th><th>user</th><th>type</th><th>name</th><th>description</th><th>config</th><th>priority</th><th>life_span</th><th>max_tries</th><th>submitted</th><th>last_updated</th><th>status</th><th>comment</th></tr>";
-                    content+='</thead>'
+                    var content="";
                     $.each(result,function(key,value){
-                        content+="<tr>";
+                        content+="<tr class='item'>";
                         content+="<td style='word-wrap:break-word;'>"+value["id"]+"</td>";
-                        content+="<td style='word-wrap:break-word;'>"+value["user"]+"</td>";
-                        content+="<td style='word-wrap:break-word;'>"+value["type"]+"</td>";
-                        content+="<td style='word-wrap:break-word;'>"+value["name"]+"</td>";
                         content+="<td style='word-wrap:break-word;'>"+value["description"]+"</td>";
                         content+="<td style='word-wrap:break-word;'>"+JSON.stringify(value["config"])+"</td>";
                         content+="<td style='word-wrap:break-word;'>"+value["priority"]+"</td>";
@@ -29,14 +36,18 @@ function update(){
                         date.setTime(value["submitted"]*1000);
                         content+="<td style='word-wrap:break-word;'>"+date.toUTCString()+"</td>";
                         date.setTime(value["last_updated"]*1000);
-                        content+="<td style='word-wrap:break-word;'>"+date.toUTCString()+"</td>";
-                        content+="<td style='word-wrap:break-word;'>"+value["status"]+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+date.toUTCString()+"</td>";                      
                         content+="<td style='word-wrap:break-word;'>"+JSON.stringify(value["comment"])+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+value["type"]+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+value["name"]+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+value["user"]+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+value["status"]+"</td>";
                         content+="</tr>";
                         
                     });
                     content+="</table>";
-                    $('#content').html(content);
+                    $('tr').remove('.item');
+                    $('#content').append(content);
                 }
     );
 };
@@ -47,7 +58,48 @@ $(document).ready(function(){
 </script>
 </head>
 <body>
-<p id="content" >
-</p>
+<table id ="content" class="table table-bordered table-hover" style="table-layout:fixed">
+    <thead class='thead-dark'>
+        <tr>
+            <th>id</th>
+            <th>description</th>
+            <th>config</th>
+            <th>priority</th>
+            <th>life_span</th>
+            <th>max_tries</th>
+            <th>submitted</th>
+            <th>last_updated</th>         
+            <th>comment</th>
+            <th>type</th>
+            <th>name</th>
+            <th>user</th>
+            <th>status</th>
+        </tr>
+    </thead>
+    <tr class="table-info">
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td><input id="type" type="text" class="form-control"></td>            
+        <td><input id="name" type="text" class="form-control"></td>
+        <td><input id="user" type="text" class="form-control"></td>
+        <td>
+            <select id="status" class='form-control'>
+                <option>all</option>
+                <option>submitted</option>
+                <option>wating</option>
+                <option>processing</option>
+                <option>done</option>
+                <option>failed</option>
+            </select>
+        </td>
+    </tr>
+</table>
 </body>
 </html>
