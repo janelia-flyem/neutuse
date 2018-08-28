@@ -7,5 +7,8 @@ setup(
     include_package_data = True,
     zip_safe = False,
     install_requires = ['Flask','Requests'],
-    scripts = ['neutuse/neutuse']
+    entry_points = {
+    
+        'console_scripts':['neutuse=neutuse:main']
+    }
 )
