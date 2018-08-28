@@ -8,11 +8,11 @@ from .man import Man
 
 class TaskMan():
     
-    def __init__(self, addr, debug):
+    def __init__(self, addr, backend, debug):
         self.host, self.port = addr.split(':')
         self.port = int(self.port)
         self.addr = addr if addr.startswith('http') else 'http://' + addr
-        
+        self.backend = backend
         self.debug = debug
         self._initApp()
         
@@ -21,12 +21,17 @@ class TaskMan():
         
         self.app.config['addr'] = self.addr
         self.app.config['model'] = Task
-        db = Sqlite('test.db', Task)
+        
+        dbtype, path = self.backend.split(':')
+        if dbtype == 'sqlite':
+            db = Sqlite(path, Task)
+        else:
+            raise NotImplementedError(dbtype+' backend has not been implemented yet')
         self.app.config['db'] = db
         self.app.config['man'] = Man(db, check_interval=10, waiting_time=5, enable_retry=False)
         
         self.app.register_blueprint(webclient.bp, url_prefix='/client')
-        self.app.register_blueprint(apiv1.bp, url_prefix='/api/v1/tasks')
+        self.app.register_blueprint(apiv1.bp, url_prefix='/api/v1')
         
         
     def run(self):

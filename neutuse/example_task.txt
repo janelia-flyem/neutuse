@@ -1,0 +1,14 @@
+{
+    "type":"dvid",
+    "name":"skeletonize",
+    "priority":0,
+    "description":"test",
+    "life_span":3600,
+    "maxtries":1,
+    "user":"test",
+    "config":{
+                "input":"/home/deli/t.tif",
+                "output":"/home/deli/result.swc",
+                "force_update":True
+             }
+}

@@ -1,0 +1,4 @@
+include neutuse/neutuse
+graft neutuse/taskman/webclient/static
+graft neutuse/taskman/webclient/templates
+global-exclude *.pyc

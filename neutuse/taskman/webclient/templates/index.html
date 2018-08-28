@@ -21,7 +21,7 @@ function update(){
     if ($('#status').val()!='all'){
         data['status']=$('#status').val();
     }
-    $.get(" {{config['addr']}}/api/v1/tasks/",data,
+    $.get(" {{config['addr']}}/api/v1/tasks",data,
                 function(result){
                     var date=new Date();
                     var content="";

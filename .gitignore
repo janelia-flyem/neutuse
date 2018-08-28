@@ -2,3 +2,8 @@
 __pycache__/
 *.swp
 *.db
+build/
+dist/
+neutuse.egg-info/
+neutuse/neutuse.egg-info/
+
