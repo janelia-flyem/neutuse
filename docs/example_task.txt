@@ -3,11 +3,11 @@
     "name":"skeletonize",
     "priority":0,
     "description":"test",
-    "life_span":3600,
+    "life_span":60,
     "max_tries":1,
     "user":"test",
     "config":{
-                "input":"/home/deli/t.tif",
+                "input":"/home/deli/test.tif",
                 "output":"/home/deli/result.swc",
                 "force_update":True
              }
