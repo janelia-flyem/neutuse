@@ -62,23 +62,26 @@ class Base():
               
     def run(self):
         while True:
-            query_url = self.addr + '/api/v1/tasks/top/{}/{}/{}'.format(self.type, self.name, self.cnt)
-            rv = rq.get(query_url)
-            
-            if rv.status_code == 200 and len(rv.json()) > 0:
-                tasks = []
-                for task in rv.json():
-                    if self.verify(task['config']):
-                        tasks.append(task)
-                    else:
-                        self.log(task,'invalid schema')
-                        self.fail(task)
-                with Pool(len(tasks)) as p:
-                    for task in tasks:
-                        self._send_processing(task)
-                    p.map(self.process,tasks)
-            else:
-                time.sleep(3)
+            try:
+                query_url = self.addr + '/api/v1/tasks/top/{}/{}/{}'.format(self.type, self.name, self.cnt)
+                rv = rq.get(query_url)
+                
+                if rv.status_code == 200 and len(rv.json()) > 0:
+                    tasks = []
+                    for task in rv.json():
+                        if self.verify(task['config']):
+                            tasks.append(task)
+                        else:
+                            self.log(task,'invalid schema')
+                            self.fail(task)
+                    with Pool(len(tasks)) as p:
+                        for task in tasks:
+                            self._send_processing(task)
+                        p.map(self.process,tasks)
+                else:
+                    time.sleep(3)
+            except Exception as e:
+                print(e)
     
     @abstractmethod
     def process(self, task):

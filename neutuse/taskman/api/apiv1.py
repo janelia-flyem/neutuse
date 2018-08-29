@@ -13,7 +13,7 @@ class ServiceMan():
 
     def __init__(self):
         self.service_list = []
-        self.service_next_id = 0
+        self.service_next_id = int(time.time())
         self.service_lock = threading.Lock()
         self.service_routine()
     

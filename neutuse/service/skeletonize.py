@@ -34,4 +34,5 @@ class Skeletonize(Base):
         if rv == 0:
             self.success(task)
         else:
+            self.log(task, 'processing process failed')
             self.fail(task)

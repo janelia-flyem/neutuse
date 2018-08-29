@@ -103,11 +103,11 @@ class Sqlite(Base):
         return max_id + 1
     
     def _to_model(self, obj):
-        dct = {'id' : obj[0], 'type' : obj[1], 'name' : obj[2],
-                'description' : obj[3], 'config' : json.loads(obj[4]),
-                'status' : obj[5], 'priority' : obj[6], 'life_span' : obj[7],
-                'max_tries' : obj[8], 'submitted' : obj[9],
-                'last_updated' : obj[10], 'comment' : json.loads(obj[11])}
+        dct = {'id':obj[0], 'type':obj[1], 'name':obj[2],
+                'description':obj[3], 'config':json.loads(obj[4]),
+                'status':obj[5], 'priority':obj[6], 'life_span':obj[7],
+                'max_tries':obj[8], 'submitted':obj[9],
+                'last_updated':obj[10], 'comment':json.loads(obj[11]), 'user':obj[12]}
         return self.model(**dct)
 
     def _filters2sql(self, filters):

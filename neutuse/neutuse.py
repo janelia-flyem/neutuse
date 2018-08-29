@@ -6,8 +6,8 @@ from .taskman import TaskMan
 from .service import Service
 
 
-def run_taskman(addr, backend, debug=False):    
-    taskman = TaskMan(addr, backend, debug)
+def run_taskman(addr, backend, enable_retry= False, debug=False):    
+    taskman = TaskMan(addr, backend, enable_retry, debug)
     taskman.run()
 
 
@@ -34,10 +34,11 @@ def help():
     print('''
     Usage:
     1) Run task manager:
-    neutuse run taskman [-a ADDR] [-b BACKEND] [-d]
+    neutuse run taskman [-a ADDR] [-b BACKEND] [-d] [-r]
     ADDR: Default is 127.0.0.1:5000
     BACKEND: Backend data base, default is sqlite:test.db
     -d debug mode
+    -r enable retry if tasks are expired
     
     2) Run service:
     neutuse run service NAME [-a ADDR] [-n NUMBER]
@@ -66,9 +67,10 @@ def main():
         if sys.argv[2] == 'taskman':
             parser.add_argument('-a', '--addr', type=str, default='127.0.0.1:5000')
             parser.add_argument('-d','--debug', action='store_true', default=False)
+            parser.add_argument('-r','--retry', action='store_true', default=False)
             parser.add_argument('-b','--backend', default='sqlite:db.db')
             args=parser.parse_args(sys.argv[3:])
-            run_taskman(args.addr, args.backend, args.debug)
+            run_taskman(args.addr, args.backend, args.retry, args.debug)
         elif sys.argv[2] == 'service':
             parser.add_argument('name', type=str)
             parser.add_argument('-a', '--addr', type=str, default='127.0.0.1:5000')

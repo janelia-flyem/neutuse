@@ -17,6 +17,7 @@ class Man():
         
     def insert(self, task):
         assert( isinstance(task,Task) )
+        print(task)
         task.id = self.db.next_available_id()
         return self.db.insert(task)
 

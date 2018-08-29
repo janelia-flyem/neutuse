@@ -34,9 +34,9 @@ function update(){
                         content+="<td style='word-wrap:break-word;'>"+value["life_span"]+"</td>";
                         content+="<td style='word-wrap:break-word;'>"+value["max_tries"]+"</td>";
                         date.setTime(value["submitted"]*1000);
-                        content+="<td style='word-wrap:break-word;'>"+date.toUTCString()+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+date.toLocaleString()+"</td>";
                         date.setTime(value["last_updated"]*1000);
-                        content+="<td style='word-wrap:break-word;'>"+date.toUTCString()+"</td>";                      
+                        content+="<td style='word-wrap:break-word;'>"+date.toLocaleString()+"</td>";                      
                         content+="<td style='word-wrap:break-word;'>"+JSON.stringify(value["comment"])+"</td>";
                         content+="<td style='word-wrap:break-word;'>"+value["type"]+"</td>";
                         content+="<td style='word-wrap:break-word;'>"+value["name"]+"</td>";
