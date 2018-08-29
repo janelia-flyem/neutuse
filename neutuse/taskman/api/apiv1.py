@@ -19,7 +19,7 @@ class ServiceMan():
     
     def service_routine(self):
         for service in self.service_list:
-            if time.time()-service['last_active'] > 5*60:
+            if time.time()-service['last_active'] > 3*60:
                 with self.service_lock:
                     self.service_list.remove(service)
         timer = threading.Timer(60, self.service_routine)
