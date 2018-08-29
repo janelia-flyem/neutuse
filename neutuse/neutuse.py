@@ -1,20 +1,17 @@
 import sys
 import json
 import argparse
-
 import requests as rq
-
 from .taskman import TaskMan
 from .service import Service
 
 
-
-def run_taskman(addr, backend, debug=False):
+def run_taskman(addr, backend, debug=False):    
     taskman = TaskMan(addr, backend, debug)
     taskman.run()
 
 
-def run_service(name, addr, number=1):
+def run_service(name, addr, number=1):    
     service = Service(name, addr, number)
     service.run()
     

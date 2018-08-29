@@ -1,4 +1,6 @@
 import json
+import threading
+import time
 from multiprocessing import Pool
 from abc import ABCMeta,abstractmethod
 
@@ -14,7 +16,21 @@ class Base():
         self.type = type_
         self.name = name
         self.cnt = cnt
+        self.register()
+        self.pulse()
     
+    def register(self):
+        service = {'type':self.type,'name':self.name}
+        rv = rq.post(self.addr + '/api/v1/services', headers={'Content-Type' : 'application/json'}, data=json.dumps(service))
+        self.id = rv.json()['id']
+    
+    def pulse(self):
+        rv = rq.post(self.addr + '/api/v1/services/{}/pulse'.format(self.id))
+        if rv.status_code != 200:
+            self.register()
+        timer = threading.Timer(60, self.pulse)
+        timer.start()
+        
     def log(self, task, comment):
         url = self.addr + '/api/v1/tasks/{}/comments'.format(task['id'])
         rq.post(url, headers={'Content-Type' : 'application/json'}, data=json.dumps(comment))
@@ -61,6 +77,8 @@ class Base():
                     for task in tasks:
                         self._send_processing(task)
                     p.map(self.process,tasks)
+            else:
+                time.sleep(3)
     
     @abstractmethod
     def process(self, task):

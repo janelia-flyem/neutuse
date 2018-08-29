@@ -41,7 +41,8 @@ class Sqlite(Base):
                     task.last_updated, json.dumps(task.comment), task.user))
             conn.commit()
             conn.close()
-        except:
+        except Exception as e:
+            print(e)
             return False
         return True
 
@@ -65,7 +66,8 @@ class Sqlite(Base):
             cur.execute(cmd, values)
             conn.commit()
             conn.close()
-        except:
+        except Exception as e:
+            print(e)
             return False
         return True
 
@@ -84,7 +86,8 @@ class Sqlite(Base):
                 rv.append(self._to_model(i))
             conn.close()
             return rv
-        except:
+        except Exception as e:
+            print(e)
             return []
 
     def next_available_id(self):

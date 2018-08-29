@@ -5,7 +5,6 @@ from .storage import Sqlite
 from .task import Task
 from .man import Man
 
-
 class TaskMan():
     
     def __init__(self, addr, backend, debug):
@@ -27,8 +26,9 @@ class TaskMan():
             db = Sqlite(path, Task)
         else:
             raise NotImplementedError(dbtype+' backend has not been implemented yet')
+        
         self.app.config['db'] = db
-        self.app.config['man'] = Man(db, check_interval=10, waiting_time=5, enable_retry=False)
+        self.app.config['task_man'] = Man(db, check_interval=10, waiting_time=5, enable_retry=False)
         
         self.app.register_blueprint(webclient.bp, url_prefix='/client')
         self.app.register_blueprint(apiv1.bp, url_prefix='/api/v1')
