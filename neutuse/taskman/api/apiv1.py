@@ -21,7 +21,13 @@ def require_manager(func):
 @require_manager
 def get_tasks():
     filters = request.args
-    return jsonify(g.man.query(filters))
+    for key in filters.keys():
+        if key not in Task.__mapping__.keys():
+            return 'invalid query filters', 400
+    rv = g.man.query(filters)
+    if len(rv) == 0:
+        return 'No tasks meet the conditions', 400
+    return jsonify(rv)
 
 
 @bp.route('/tasks/<int:id_>/', methods=['GET'])
@@ -33,7 +39,7 @@ def get_tasks_by_id(id_):
     if len(rv) > 0:
         return  jsonify(rv[0])
     else:
-        return jsonify(None)
+        return 'No tasks have this id', 400
 
 
 @bp.route('/tasks/<int:id_>/<string:property_>/', methods=['GET'])
@@ -42,17 +48,24 @@ def get_tasks_by_id(id_):
 def get_tasks_property_by_id(id_, property_):
     filters = {'id' : id_}
     rv = g.man.query(filters)
-    if len(rv) > 0 and property_ in rv[0]:
-        return jsonify(rv[0][property_])
+    if len(rv) > 0:
+        if property_ in rv[0]:
+            return jsonify(rv[0][property_])
+        else:
+            return 'Task found, but it does not contain the specified property', 400
     else:
-        return jsonify(None)
+        return 'No tasks have this id', 400
 
 
 @bp.route('/tasks/top/<string:type_>/<string:name>/<int:cnt>/', methods=['GET'])
 @bp.route('/tasks/top/<string:type_>/<string:name>/<int:cnt>', methods=['GET'])
 @require_manager
 def top(type_, name, cnt):
-    return jsonify(g.man.top(cnt, type_, name))
+    rv = g.man.top(cnt, type_, name)
+    if len(rv) > 0:
+        return jsonify(rv)
+    else:
+        return 'No more tasks', 400
 
 
 #create
@@ -64,11 +77,11 @@ def post_tasks():
     try:
         task = Task(**config)
     except:
-        return jsonify(None)
+        return 'Failed to create the task because of invalid properties', 400
     if g.man.insert(task):
         return jsonify(task)
     else:
-        return jsonify(None)
+        return 'Task created, but failed to store into the database', 400
 
 
 #update status :processing ,failed or done
@@ -77,11 +90,11 @@ def post_tasks():
 @require_manager
 def update_status(id_, status):
     if not status in ('processing', 'failed', 'done'):
-        return jsonify(None)
+        return 'Illegal status', 400
     if g.man.update(id_, {'status' : status}):
         return jsonify(g.man.query({'id' : id_})[0])
     else:
-        return jsonify(None)
+        return 'Failed to update the status', 400
         
 
 #add comment
@@ -92,14 +105,14 @@ def add_comment(id_):
     comment = request.json
     task = g.man.query({'id' : id_})
     if len(task) < 1:
-        return jsonify(None)
+        return 'No tasks have this id', 400
     task = task[0]
     comments = task.comment
     try:
         comments.append(str(comment))
     except:
-        return jsonify(None)
+        return 'Invalid comment format', 400
     if g.man.update(id_, {'comment' : json.dumps(comments)}):
         return jsonify(g.man.query({'id' : id_})[0])
     else:
-        return jsonify(None)
+        return 'Failed to add the comment', 400

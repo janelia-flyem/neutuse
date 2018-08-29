@@ -23,6 +23,9 @@ class Task(dict):
     }
 
     def __init__(self, **kwargs):
+        for k in kwargs:
+            if k not in self.__mapping__.keys():
+                raise AttributeError('class Task does not have attribute ' + str(k))
         for k in self.__mapping__:
             if self.__mapping__[k]['required']:
                 if not k in kwargs:

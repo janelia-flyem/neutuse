@@ -16,7 +16,8 @@ class Skeletonize(Base):
     def __init__(self, addr, cnt=1):
         super(Skeletonize, self).__init__(addr, 'dvid', 'skeletonize', cnt)
         
-    def process(self, config):
+    def process(self, task):
+        config = task['config']
         cmd = 'neutu --command --skeletonize '
         cmd += config['input']
         if 'force_update' in config and config['force_update']:
@@ -26,8 +27,11 @@ class Skeletonize(Base):
         if 'output' in config:
             cmd += ' -o ' + config['output']
         
-        self.log(cmd)
+        self.log(task, cmd)
         
         rv = os.system(cmd)
         
-        return rv == 0
+        if rv == 0:
+            self.success(task)
+        else:
+            self.fail(task)

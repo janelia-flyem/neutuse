@@ -28,6 +28,8 @@ def post_task(addr, data):
     HEADERS={'Content-Type':'application/json'}
     rv = rq.post(addr, data=json.dumps(data), headers=HEADERS)
     print( rv.status_code )
+    if rv.status_code !=200:
+        print(rv.text)
     return rv.status_code == 200
 
 
@@ -38,14 +40,14 @@ def help():
     neutuse run taskman [-a ADDR] [-b BACKEND] [-d]
     ADDR: Default is 127.0.0.1:5000
     BACKEND: Backend data base, default is sqlite:test.db
-    -d debug mode'
+    -d debug mode
     
     2) Run service:
     neutuse run service NAME [-a ADDR] [-n NUMBER]
     ADDR: which address the task manager is running
     Default ADDR is 127.0.0.1:5000
     NAME: specifies service name
-    NUMBER: Numbers of tasks to fetch at each time
+    NUMBER: Numbers of tasks to fetch and process at each same time
     
     3) Post task:
     neutuse post FILE [-a ADDR]
@@ -86,8 +88,6 @@ def main():
             data=eval(f.read())    
         if post_task(args.addr, data):
             print('done')
-        else:
-            print('failed')
     else:
         help()
     
