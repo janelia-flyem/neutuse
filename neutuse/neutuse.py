@@ -61,6 +61,7 @@ def main():
     
     if num_args <= 1:
         help()
+        return
     
     if sys.argv[1] == 'run' and num_args >= 3 :
         if sys.argv[2] == 'taskman':
