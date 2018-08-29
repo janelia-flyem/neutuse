@@ -3,7 +3,7 @@
     "name":"skeletonize",
     "priority":0,
     "description":"test",
-    "life_span":60,
+    "life_span":3600,
     "max_tries":1,
     "user":"test",
     "config":{
