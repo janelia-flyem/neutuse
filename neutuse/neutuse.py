@@ -8,8 +8,8 @@ from .database import Server
 from .process import Engine
 
 
-def run_database(addr, backend, enable_retry= False, debug=False, log=None):    
-    database = Server(addr, backend, enable_retry, debug, log)
+def run_database(addr, backend, enable_retry= False, debug=False, log_file=''):    
+    database = Server(addr, backend, enable_retry, debug, log_file)
     database.run()
 
 

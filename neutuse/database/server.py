@@ -11,7 +11,8 @@ from .taskmanager import TaskManager
 
 class Server():
     
-    def __init__(self, addr='127.0.0.1:5000', backend='sqlite:db.db', enable_retry=False, debug=False, log_file=None):
+    def __init__(self, addr='127.0.0.1:5000', backend='sqlite:db.db',
+    enable_retry=False, debug=False, log_file=''):
         self.host, self.port = addr.split(':')
         self.port = int(self.port)
         self.addr = addr if addr.startswith('http') else 'http://' + addr
@@ -37,7 +38,7 @@ class Server():
         sh.setFormatter(logging.Formatter(fmt))
         self.logger.addHandler(sh)
         
-        if self.log_file:
+        if self.log_file !='' :
             fh = logging.handlers.RotatingFileHandler(self.log_file,maxBytes = 1024*1024*100, backupCount = 3)    
             fh.setFormatter(logging.Formatter(fmt))
             werk_logger.addHandler(fh)
