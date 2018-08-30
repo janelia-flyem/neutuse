@@ -36,7 +36,7 @@ class TaskProcessor():
             fh.setFormatter(logging.Formatter(fmt))
             werk_logger.addHandler(fh)
             self.logger.addHandler(fh)
-        
+    
     def register(self):
         service = {'type':self.type,'name':self.name}
         rv = rq.post(self.addr + '/api/v1/services', headers={'Content-Type' : 'application/json'}, data=json.dumps(service))
@@ -126,7 +126,7 @@ class TaskProcessor():
                     else:
                         time.sleep(10)
             except Exception as e:
-                print(e)
+                self.logger.info(e)
     
     @abstractmethod
     def process(self, task):

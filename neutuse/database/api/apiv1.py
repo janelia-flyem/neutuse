@@ -59,7 +59,7 @@ def require_logger(func):
         g.logger = current_app.config['logger']
         g.logger.info(request.method + ' ' + request.url)
         if request.method == 'POST':
-            g.logger.info(' POSTED DATA: {}'.format(request.json))
+            g.logger.info('POSTED DATA: {}'.format(request.json))
         return func(*args, **kwargs)
     return wrapper
     
