@@ -14,8 +14,8 @@ class Skeletonize(TaskProcessor):
     'output' : {'required' : False, 'type' : str}
     }
     
-    def __init__(self, addr, cnt=1):
-        super(Skeletonize, self).__init__(addr, 'dvid', 'skeletonize', cnt)
+    def __init__(self, addr, log_file='', cnt=1):
+        super(Skeletonize, self).__init__(addr, 'dvid', 'skeletonize', log_file, cnt)
         
     def process(self, task):
         config = task['config']

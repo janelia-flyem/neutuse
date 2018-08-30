@@ -81,7 +81,6 @@ def require_serman(func):
 def service_list():
     service_list = g.service_man.get_service_list()
     if len(service_list) > 0:
-        g.logger.info('OK')
         return jsonify(service_list)
     rv = 'FAILED: No active services found'
     g.logger.info(rv)
@@ -96,7 +95,6 @@ def create_service():
     config = request.json
     if 'type' in config and 'name' in config:
         service = g.service_man.add_service(config['type'],config['name'])
-        g.logger.info('OK')
         return jsonify(service)
     rv = 'FAILED: Missing task type or name'
     g.logger.info(rv)
@@ -110,7 +108,6 @@ def create_service():
 def pulse(id_):
     service = g.service_man.pulse(id_)
     if service is not None:
-        g.logger.info('OK')
         return jsonify(service)
     rv = 'FAILED: No services have this id'
     g.logger.info(rv)
@@ -134,7 +131,6 @@ def get_tasks():
         rv = 'FAILED: No tasks meet the conditions'
         g.logger.info(rv)
         return rv, 400
-    g.logger.info('OK')
     return jsonify(rv)
 
 
@@ -146,7 +142,6 @@ def get_tasks_by_id(id_):
     filters = {'id' : id_}
     rv = g.man.query(filters)
     if len(rv) > 0:
-        g.logger.info('OK')
         return  jsonify(rv[0])
     else:
         rv  = 'FAILED: No tasks have this id'
@@ -163,7 +158,6 @@ def get_tasks_property_by_id(id_, property_):
     rv = g.man.query(filters)
     if len(rv) > 0:
         if property_ in rv[0]:
-            g.logger.info('OK')
             return jsonify(rv[0][property_])
         else:
             rv = 'FAILED: Task found, but it does not contain the specified property'
@@ -182,7 +176,6 @@ def get_tasks_property_by_id(id_, property_):
 def top(type_, name, cnt):
     rv = g.man.top(cnt, type_, name)
     if len(rv) > 0:
-        g.logger.info('OK')
         return jsonify(rv)
     else:
         rv = 'FAILED: No more tasks'
@@ -204,7 +197,6 @@ def post_tasks():
         g.logger.info(rv)
         return rv, 400
     if g.man.insert(task):
-        g.logger.info('OK')
         return jsonify(task)
     else:
         rv = 'FAILED: Task created, but failed to store into the database'
@@ -223,7 +215,6 @@ def update_status(id_, status):
         g.logger.info(rv)
         return rv, 400
     if g.man.update(id_, {'status' : status}):
-        g.logger.info('OK')
         return jsonify(g.man.query({'id' : id_})[0])
     else:
         rv = 'FAILED: Failed to update the status'
@@ -252,7 +243,6 @@ def add_comment(id_):
         g.logger.info(rv)
         return rv, 400
     if g.man.update(id_, {'comment' : json.dumps(comments)}):
-        g.logger.info('OK')
         return jsonify(g.man.query({'id' : id_})[0])
     else:
         rv = 'FAILED: Failed to add the comment'

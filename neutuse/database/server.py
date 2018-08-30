@@ -45,7 +45,8 @@ class Server():
 
     def _init_app(self):
         self.app = Flask(__name__)
-        self.app.logger = self.logger
+        #print(self.app.logger)
+        #self.app.logger = self.logger
         self.app.config['logger'] = self.logger
         self.app.config['addr'] = self.addr
         self.app.config['model'] = Task
