@@ -126,7 +126,7 @@ class TaskProcessor():
                     else:
                         time.sleep(10)
             except Exception as e:
-                self.logger.info(e)
+                self.logger.error(e)
     
     @abstractmethod
     def process(self, task):
