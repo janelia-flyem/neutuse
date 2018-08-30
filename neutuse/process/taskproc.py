@@ -111,7 +111,7 @@ class TaskProcessor():
                             self._send_processing(task)
                             with self.lock:
                                 self.num_workers += 1
-                            self.logger.info('Start process task {}'.format(task['id']))
+                            self.logger.info('Start processing task {}'.format(task['id']))
                             threading.Thread(target=self.process, args=(task,)).start()
                     else:
                         time.sleep(3)
