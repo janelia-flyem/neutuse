@@ -1,6 +1,6 @@
 from .skeletonize import Skeletonize
 
-class Service():
+class Engine():
     
     def __init__(self, name, addr, number=1):
         self.name = name

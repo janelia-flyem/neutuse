@@ -1,19 +1,21 @@
 import sys
 import json
 import argparse
+
 import requests as rq
-from .taskman import TaskMan
-from .service import Service
+
+from .database import Server
+from .process import Engine
 
 
-def run_taskman(addr, backend, enable_retry= False, debug=False):    
-    taskman = TaskMan(addr, backend, enable_retry, debug)
-    taskman.run()
+def run_database(addr, backend, enable_retry= False, debug=False, log=None):    
+    database = Server(addr, backend, enable_retry, debug, log)
+    database.run()
 
 
-def run_service(name, addr, number=1):    
-    service = Service(name, addr, number)
-    service.run()
+def run_process(name, addr, number=1):    
+    engine = Engine(name, addr, number)
+    engine.run()
     
 
 def post_task(addr, data):
@@ -33,23 +35,23 @@ def post_task(addr, data):
 def help():
     print('''
     Usage:
-    1) Run task manager:
-    neutuse run taskman [-a ADDR] [-b BACKEND] [-d] [-r]
+    1) Run database:
+    neutuse run database [-a ADDR] [-b BACKEND] [-d] [-r]
     ADDR: Default is 127.0.0.1:5000
     BACKEND: Backend data base, default is sqlite:test.db
     -d debug mode
     -r enable retry if tasks are expired
     
-    2) Run service:
-    neutuse run service NAME [-a ADDR] [-n NUMBER]
-    ADDR: which address the task manager is running
+    2) Run process:
+    neutuse run process NAME [-a ADDR] [-n NUMBER]
+    ADDR: which address the database is running
     Default ADDR is 127.0.0.1:5000
-    NAME: specifies service name
-    NUMBER: Numbers of tasks to fetch and process at each same time
+    NAME: specifies the name of process
+    NUMBER: Numbers of workers
     
     3) Post task:
     neutuse post FILE [-a ADDR]
-    ADDR: which address the task manager is running
+    ADDR: which address the database is running
     Default ADDR is 127.0.0.1:5000
     FILE: File describes the task
     ''')
@@ -64,19 +66,20 @@ def main():
         return
     
     if sys.argv[1] == 'run' and num_args >= 3 :
-        if sys.argv[2] == 'taskman':
-            parser.add_argument('-a', '--addr', type=str, default='127.0.0.1:5000')
+        if sys.argv[2] == 'database':
+            parser.add_argument('-a', '--addr', default='127.0.0.1:5000')
             parser.add_argument('-d','--debug', action='store_true', default=False)
             parser.add_argument('-r','--retry', action='store_true', default=False)
             parser.add_argument('-b','--backend', default='sqlite:db.db')
+            parser.add_argument('-l','--log', default='/tmp/neutuse.log')
             args=parser.parse_args(sys.argv[3:])
-            run_taskman(args.addr, args.backend, args.retry, args.debug)
-        elif sys.argv[2] == 'service':
+            run_database(args.addr, args.backend, args.retry, args.debug, args.log)
+        elif sys.argv[2] == 'process':
             parser.add_argument('name', type=str)
             parser.add_argument('-a', '--addr', type=str, default='127.0.0.1:5000')
             parser.add_argument('-n', '--number', type=int, default=1)
             args=parser.parse_args(sys.argv[3:])
-            run_service(args.name, args.addr, args.number)
+            run_process(args.name, args.addr, args.number)
         else:
             help() 
     elif sys.argv[1] == 'post':

@@ -2,13 +2,13 @@ import time
 import threading
 import heapq
 from .task import Task
-from .storage import Base
-from .storage.op import Equal, And, Or, Not, Greater
+from .storage import StorageBase
+from .storage.operation import Equal, And, Or, Not, Greater
 
-class Man():
+class TaskManager():
     
     def __init__(self, db, check_interval=10, waiting_time=5, enable_retry=False):
-        assert( isinstance(db, Base) )
+        assert( isinstance(db, StorageBase) )
         self.db = db
         self.check_interval = check_interval
         self.waiting_time = waiting_time

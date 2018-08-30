@@ -2,9 +2,10 @@ import os
 import time
 import json
 import requests as rq
-from .base import Base
 
-class Skeletonize(Base):
+from .taskproc import TaskProcessor
+
+class Skeletonize(TaskProcessor):
     
     __schema__ = {
     'input' : {'required': True, 'type': str},

@@ -1,10 +1,10 @@
 import json
 import sqlite3 as sql
 
-from .base import Base
-from .op import *
+from .storagebase import StorageBase
+from .operation import *
 
-class Sqlite(Base):
+class Sqlite(StorageBase):
 
     def __init__(self, name, model):
         super(Sqlite, self).__init__()

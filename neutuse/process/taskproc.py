@@ -5,7 +5,7 @@ from abc import ABCMeta,abstractmethod
 
 import requests as rq 
 
-class Base():
+class TaskProcessor():
     
     __metaclass__ = ABCMeta
     __chema__ = {}

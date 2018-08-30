@@ -1,7 +1,7 @@
 from abc import ABCMeta,abstractmethod
 
 
-class Base():
+class StorageBase():
     
     __metaclass__ = ABCMeta
 
