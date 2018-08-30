@@ -53,6 +53,17 @@ def require_taskman(func):
     return wrapper
     
 
+def require_logger(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        g.logger = current_app.config['logger']
+        g.logger.info(request.method + ' ' + request.url)
+        if request.method == 'POST':
+            g.logger.info(' POSTED DATA: {}'.format(request.json))
+        return func(*args, **kwargs)
+    return wrapper
+    
+
 def require_serman(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -66,136 +77,184 @@ def require_serman(func):
 @bp.route('/services/', methods=['GET'])
 @bp.route('/services', methods=['GET'])
 @require_serman
+@require_logger
 def service_list():
     service_list = g.service_man.get_service_list()
     if len(service_list) > 0:
+        g.logger.info('OK')
         return jsonify(service_list)
-    return 'No active services found', 400
+    rv = 'FAILED: No active services found'
+    g.logger.info(rv)
+    return rv, 400
 
 
 @bp.route('/services/', methods=['POST'])
 @bp.route('/services', methods=['POST'])
 @require_serman
+@require_logger
 def create_service():
     config = request.json
-    if not 'type' in config:
-        return 'Task type required', 400
-    if not 'name' in config:
-        return 'Task name required', 400
-    service = g.service_man.add_service(config['type'],config['name'])
-    return jsonify(service)
+    if 'type' in config and 'name' in config:
+        service = g.service_man.add_service(config['type'],config['name'])
+        g.logger.info('OK')
+        return jsonify(service)
+    rv = 'FAILED: Missing task type or name'
+    g.logger.info(rv)
+    return rv, 400
     
 
 @bp.route('/services/<int:id_>/pulse/', methods=['POST'])
 @bp.route('/services/<int:id_>/pulse', methods=['POST'])
 @require_serman
+@require_logger
 def pulse(id_):
     service = g.service_man.pulse(id_)
     if service is not None:
+        g.logger.info('OK')
         return jsonify(service)
-    return 'No services have this id', 400
+    rv = 'FAILED: No services have this id'
+    g.logger.info(rv)
+    return rv, 400
 
 
 #query
 @bp.route('/tasks/', methods=['GET'])
 @bp.route('/tasks', methods=['GET'])
 @require_taskman
+@require_logger
 def get_tasks():
     filters = request.args
     for key in filters.keys():
         if key not in Task.__mapping__.keys():
-            return 'invalid query filters', 400
+            rv  = 'FAILED: Invalid query filters'
+            g.logger.info(rv)
+            return rv, 400
     rv = g.man.query(filters)
     if len(rv) == 0:
-        return 'No tasks meet the conditions', 400
+        rv = 'FAILED: No tasks meet the conditions'
+        g.logger.info(rv)
+        return rv, 400
+    g.logger.info('OK')
     return jsonify(rv)
 
 
 @bp.route('/tasks/<int:id_>/', methods=['GET'])
 @bp.route('/tasks/<int:id_>', methods=['GET'])
 @require_taskman
+@require_logger
 def get_tasks_by_id(id_):
     filters = {'id' : id_}
     rv = g.man.query(filters)
     if len(rv) > 0:
+        g.logger.info('OK')
         return  jsonify(rv[0])
     else:
-        return 'No tasks have this id', 400
+        rv  = 'FAILED: No tasks have this id'
+        g.logger.info(rv)
+        return rv, 400
 
 
 @bp.route('/tasks/<int:id_>/<string:property_>/', methods=['GET'])
 @bp.route('/tasks/<int:id_>/<string:property_>', methods=['GET'])
 @require_taskman
+@require_logger
 def get_tasks_property_by_id(id_, property_):
     filters = {'id' : id_}
     rv = g.man.query(filters)
     if len(rv) > 0:
         if property_ in rv[0]:
+            g.logger.info('OK')
             return jsonify(rv[0][property_])
         else:
-            return 'Task found, but it does not contain the specified property', 400
+            rv = 'FAILED: Task found, but it does not contain the specified property'
+            g.logger.info(rv)
+            return rv, 400
     else:
-        return 'No tasks have this id', 400
+        rv  = 'FAILED: No tasks have this id'
+        g.logger.info(rv)
+        return rv, 400
 
 
 @bp.route('/tasks/top/<string:type_>/<string:name>/<int:cnt>/', methods=['GET'])
 @bp.route('/tasks/top/<string:type_>/<string:name>/<int:cnt>', methods=['GET'])
 @require_taskman
+@require_logger
 def top(type_, name, cnt):
     rv = g.man.top(cnt, type_, name)
     if len(rv) > 0:
+        g.logger.info('OK')
         return jsonify(rv)
     else:
-        return 'No more tasks', 400
+        rv = 'FAILED: No more tasks'
+        g.logger.info(rv)
+        return rv, 400
 
 
 #create
 @bp.route('/tasks/', methods=['POST'])
 @bp.route('/tasks', methods=['POST'])
 @require_taskman
+@require_logger
 def post_tasks():
     config = request.json
     try:
         task = Task(**config)
     except Exception as e:
-        print(e)
-        return 'Failed to create the task because of invalid properties', 400
+        rv = 'FAILED: Failed to create the task because of invalid properties' + str(e) 
+        g.logger.info(rv)
+        return rv, 400
     if g.man.insert(task):
+        g.logger.info('OK')
         return jsonify(task)
     else:
-        return 'Task created, but failed to store into the database', 400
+        rv = 'FAILED: Task created, but failed to store into the database'
+        g.logger.info(rv)
+        return rv, 400
 
 
 #update status :processing ,failed or done
 @bp.route('/tasks/<int:id_>/status/<string:status>/', methods=['POST'])
 @bp.route('/tasks/<int:id_>/status/<string:status>', methods=['POST'])
 @require_taskman
+@require_logger
 def update_status(id_, status):
     if not status in ('processing', 'failed', 'done'):
-        return 'Illegal status', 400
+        rv = 'FAILED: Illegal status'
+        g.logger.info(rv)
+        return rv, 400
     if g.man.update(id_, {'status' : status}):
+        g.logger.info('OK')
         return jsonify(g.man.query({'id' : id_})[0])
     else:
-        return 'Failed to update the status', 400
+        rv = 'FAILED: Failed to update the status'
+        g.logger.info(rv)
+        return rv, 400
         
 
 #add comment
 @bp.route('/tasks/<int:id_>/comments/', methods=['POST'])
 @bp.route('/tasks/<int:id_>/comments', methods=['POST'])
 @require_taskman
+@require_logger
 def add_comment(id_):
     comment = request.json
     task = g.man.query({'id' : id_})
     if len(task) < 1:
-        return 'No tasks have this id', 400
+        rv = 'FAILED: No tasks have this id'
+        g.logger.info(rv)
+        return rv, 400
     task = task[0]
     comments = task.comment
     try:
         comments.append(str(comment))
     except Exception as e:
-        print(e)
-        return 'Invalid comment format', 400
+        rv = 'FAILED: Invalid comment format: ' + str(e) 
+        g.logger.info(rv)
+        return rv, 400
     if g.man.update(id_, {'comment' : json.dumps(comments)}):
+        g.logger.info('OK')
         return jsonify(g.man.query({'id' : id_})[0])
     else:
-        return 'Failed to add the comment', 400
+        rv = 'FAILED: Failed to add the comment'
+        g.logger.info(rv)
+        return rv, 400

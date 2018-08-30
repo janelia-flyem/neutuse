@@ -1,4 +1,5 @@
 import logging
+import logging.handlers
 
 from flask import Flask
 
@@ -25,7 +26,7 @@ class Server():
     def _init_logger(self):
         self.logger = logging.getLogger('neutuse')
         werk_logger = logging.getLogger('werkzeug')
-        
+        werk_logger.disabled = True
         if self.debug:
             self.logger.setLevel(logging.DEBUG)
         else:
@@ -37,7 +38,7 @@ class Server():
         self.logger.addHandler(sh)
         
         if self.log_file:
-            fh = logging.FileHandler(self.log_file)    
+            fh = logging.handlers.RotatingFileHandler(self.log_file,maxBytes = 1024*1024*100, backupCount = 3)    
             fh.setFormatter(logging.Formatter(fmt))
             werk_logger.addHandler(fh)
             self.logger.addHandler(fh)
