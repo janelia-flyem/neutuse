@@ -18,11 +18,11 @@ class Task(dict):
         'config' : {'type' : dict, 'required' : True},
         'status' : {'type' : str, 'required' : False, 'default' : 'submitted'},
         'priority' : {'type' : int, 'required' : False, 'default' : 0},
-        'life_span' : {'type' : float, 'required' : False, 'default' : 3600},
+        'life_span' : {'type' : int, 'required' : False, 'default' : 3600},
         'max_tries' : {'type' : int, 'required' : False, 'default' : 1},
         'submitted' : {'type' : float, 'required' : False, 'default' : lambda : time.time()},
         'last_updated' : {'type' : float, 'required' : False, 'default' : lambda:time.time()},
-        'comment' : {'type' : list, 'required' : False, 'default' : []},
+        'comments' : {'type' : list, 'required' : False, 'default' : []},
         'user' : {'type' : str, 'required' : False, 'default' : 'anonymous'}
     }
 
@@ -33,10 +33,16 @@ class Task(dict):
         for k in self.__mapping__:
             if self.__mapping__[k]['required']:
                 if not k in kwargs:
-                    raise Exception(str(k) + ' should be provied')
+                    raise Exception(str(k) + ' should be provided')
+                if not isinstance(kwargs[k],self.__mapping__[k]['type']):
+                    raise Exception('type of {} should be {}, but you provide {} with value {}'.format(str(k),
+                        self.__mapping__[k]['type'],type(kwargs[k]),kwargs[k]))
                 self[k] = kwargs[k]
             else:
                 if k in kwargs:
+                    if not isinstance(kwargs[k],self.__mapping__[k]['type']):
+                        raise Exception('type of {} should be {}, but you provide {} with value {}'.format(str(k),
+                        self.__mapping__[k]['type'],type(kwargs[k]),kwargs[k]))
                     self[k] = kwargs[k]
                 else:
                     try:

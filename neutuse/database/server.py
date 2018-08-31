@@ -18,7 +18,8 @@ class Server():
     
     def __init__(self, addr='127.0.0.1:5000', backend='sqlite:db.db',
     enable_retry=False, debug=False, log_file=''):
-        self.host, self.port = addr.split(':')
+        pos = addr.rfind(':')
+        self.host, self.port = addr[:pos], addr[pos+1:]
         self.port = int(self.port)
         self.addr = addr if addr.startswith('http') else 'http://' + addr
         self.backend = backend
