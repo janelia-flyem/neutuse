@@ -1,6 +1,6 @@
 # Desciption
 
-neutuse is a flexibale computing service frame work.
+neutuse is a flexible serive oriented framework designed for connectome reconstrucion.
 
 # Installation
 
