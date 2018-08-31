@@ -1,5 +1,5 @@
 '''
-    This File tests neutuse HTTP APIS version 1.
+    This File tests neutuse HTTP APIS.
     If everything is fine, you should see 'OK' at the bottom of the screen.
 '''
 

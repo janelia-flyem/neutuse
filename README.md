@@ -8,6 +8,10 @@ git clone https://github.com/ephemera2015/neutuse.git
 cd neutuse   
 python setup.py install
 
+After Installation you may run tests by:
+python tests/test.py
+
+If everything is fine, you should see 'OK' at the bottom of the screen
 # Usage
     1) Run database:
     neutuse run database [-a ADDR] [-b BACKEND] [-d DEBUG] [-r RETRY] [-l LOG]
