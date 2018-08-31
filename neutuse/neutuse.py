@@ -81,6 +81,7 @@ def main():
             parser.add_argument('-a', '--addr', type=str, default='127.0.0.1:5000')
             parser.add_argument('-n', '--number', type=int, default=1)
             parser.add_argument('-l', '--log', default='')
+            parser.add_argument('--config', type=str, default='')
             args=parser.parse_args(sys.argv[3:])
             run_process(args.name, args.addr, args.log, args.number)
         else:
