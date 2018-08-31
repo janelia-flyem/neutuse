@@ -1,6 +1,7 @@
 # Desciption
 
-neutuse is a flexible serive oriented framework designed for connectome reconstrucion.
+neutuse is a flexible serive oriented framework designed for connectome reconstrucion. 
+For details, see [wiki page](https://github.com/ephemera2015/neutuse/wiki)  
 
 # Installation
 
