@@ -5,7 +5,11 @@ from .storagebase import StorageBase
 from .operation import *
 
 class Sqlite(StorageBase):
-
+    
+    '''
+    This class implements task's backend using sqlite database.
+    '''
+    
     def __init__(self, name, model):
         super(Sqlite, self).__init__()
         self.name = name

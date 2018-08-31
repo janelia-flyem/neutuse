@@ -8,33 +8,8 @@ from .database import Server
 from .process import Engine
 
 
-def run_database(addr, backend, enable_retry= False, debug=False, log_file=''):    
-    database = Server(addr, backend, enable_retry, debug, log_file)
-    database.run()
+__doc__ = '''Usage:
 
-
-def run_process(name, addr, log_file='', number=1):    
-    engine = Engine(name, addr, log_file, number)
-    engine.run()
-    
-
-def post_task(addr, data):
-    if not addr.startswith('http'):
-        addr = 'http://' + addr
-    if not addr.endswith('/'):
-        addr += '/'
-    addr += 'api/v1/tasks'
-    HEADERS={'Content-Type':'application/json'}
-    rv = rq.post(addr, data=json.dumps(data), headers=HEADERS)
-    print( rv.status_code )
-    if rv.status_code !=200:
-        print(rv.text)
-    return rv.status_code == 200
-
-
-def help():
-    print('''
-    Usage:
     1) Run database:
     neutuse run database [-a ADDR] [-b BACKEND] [-d DEBUG] [-r RETRY] [-l LOG]
     ADDR: Default is 127.0.0.1:5000
@@ -56,7 +31,57 @@ def help():
     ADDR: which address the database is running
     Default ADDR is 127.0.0.1:5000
     FILE: File describes the task
-    ''')
+'''
+
+
+def run_database(addr, backend, enable_retry= False, debug=False, log_file=''):
+    '''
+    Args:
+        addr(str): Which address the database will be running. Example: 127.0.0.1:5000
+        backend(str): Which backend the database will be using. Example: Sqlite:test.db
+        enable_retry(bool): If retry is enabled, expired tasks will be fetched by processes
+        debug(bool): Enable debug mode or not
+        log_file(str): Writing logs to which file.
+    '''    
+    database = Server(addr, backend, enable_retry, debug, log_file)
+    database.run()
+
+
+def run_process(name, addr, log_file='', num_workers=1):    
+    '''
+    Args:
+        name(str): The name of process to run.
+        addr(str): Which address the database is running. Example: 127.0.0.1:5000
+        num_workers(int): Maximum number of workers 
+        log_file(str): Writing logs to which file.
+    '''
+    engine = Engine(name, addr, log_file, num_workers)
+    engine.run()
+    
+
+def post_task(addr, data):
+    '''
+    Args:
+        addr(str): Which address the database is running. Example: 127.0.0.1:5000
+        data(dict): Task to post.
+    Returns:
+        bool: success or fail
+    '''
+    if not addr.startswith('http'):
+        addr = 'http://' + addr
+    if not addr.endswith('/'):
+        addr += '/'
+    addr += 'api/v1/tasks'
+    HEADERS={'Content-Type':'application/json'}
+    rv = rq.post(addr, data=json.dumps(data), headers=HEADERS)
+    print( rv.status_code )
+    if rv.status_code !=200:
+        print(rv.text)
+    return rv.status_code == 200
+
+
+def help():
+    print(__doc__)
     
     
 def main(): 

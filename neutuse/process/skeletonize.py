@@ -7,6 +7,10 @@ from .taskproc import TaskProcessor
 
 class Skeletonize(TaskProcessor):
     
+    '''
+    This class processes tasks that have type "dvid" and name "skeletonize".
+    '''
+    
     __schema__ = {
     'input' : {'required': True, 'type': str},
     'force_update' : {'required': False, 'type': bool},
@@ -14,8 +18,8 @@ class Skeletonize(TaskProcessor):
     'output' : {'required' : False, 'type' : str}
     }
     
-    def __init__(self, addr, log_file='', cnt=1):
-        super(Skeletonize, self).__init__(addr, 'dvid', 'skeletonize', log_file, cnt)
+    def __init__(self, addr, log_file='', num_workers=1):
+        super(Skeletonize, self).__init__(addr, 'dvid', 'skeletonize', log_file, num_workers)
         
     def process(self, task):
         config = task['config']

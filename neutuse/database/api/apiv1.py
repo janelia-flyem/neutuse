@@ -1,3 +1,8 @@
+'''
+This file exposes RESTful HTTP APIS to interact with service manager and task manager.
+'''
+
+
 from functools import wraps
 import json
 import threading

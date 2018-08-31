@@ -5,6 +5,10 @@ import time
 
 class Task(dict):
 
+    '''
+    This class defines the task schema.
+    '''
+    
     __status__ = ('submitted', 'waiting', 'processing', 'expired', 'failed', 'done')
     __mapping__ = {
         'id' : {'type' : int, 'required' : False, 'default' : 0},

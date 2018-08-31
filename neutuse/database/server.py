@@ -10,6 +10,11 @@ from .task import Task
 from .taskmanager import TaskManager
 
 class Server():
+
+    '''
+    This is the database server Class. 
+    It initializes flask app, database backends, logging system and so on.
+    '''
     
     def __init__(self, addr='127.0.0.1:5000', backend='sqlite:db.db',
     enable_retry=False, debug=False, log_file=''):
