@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module neutuse.database.taskmanager</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="neutuse.html"><font color="#ffffff">neutuse</font></a>.<a href="neutuse.database.html"><font color="#ffffff">database</font></a>.taskmanager</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/deli/janelia/neutuse/neutuse/database/taskmanager.py">/home/deli/janelia/neutuse/neutuse/database/taskmanager.py</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="heapq.html">heapq</a><br>
+</td><td width="25%" valign=top><a href="threading.html">threading</a><br>
+</td><td width="25%" valign=top><a href="time.html">time</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="builtins.html#object">builtins.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="neutuse.database.taskmanager.html#TaskManager">TaskManager</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="TaskManager">class <strong>TaskManager</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>This&nbsp;class&nbsp;manages&nbsp;tasks&nbsp;and&nbsp;exposes&nbsp;common&nbsp;operating&nbsp;functions&nbsp;such&nbsp;as&nbsp;insert,&nbsp;query&nbsp;and&nbsp;update&nbsp;tasks.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="TaskManager-__init__"><strong>__init__</strong></a>(self, db, check_interval=10, waiting_time=5, enable_retry=False)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<dl><dt><a name="TaskManager-insert"><strong>insert</strong></a>(self, task)</dt></dl>
+
+<dl><dt><a name="TaskManager-query"><strong>query</strong></a>(self, filters)</dt></dl>
+
+<dl><dt><a name="TaskManager-top"><strong>top</strong></a>(self, cnt, type_, name)</dt><dd><tt>This&nbsp;function&nbsp;query&nbsp;top&nbsp;n&nbsp;tasks&nbsp;based&nbsp;on&nbsp;their&nbsp;priorities<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;cnt(int):&nbsp;Number&nbsp;of&nbsp;tasks&nbsp;to&nbsp;fetch<br>
+&nbsp;&nbsp;&nbsp;&nbsp;type_(str):&nbsp;The&nbsp;type&nbsp;of&nbsp;tasks<br>
+&nbsp;&nbsp;&nbsp;&nbsp;name(str):&nbsp;The&nbsp;name&nbsp;of&nbsp;tasks<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;list:&nbsp;array&nbsp;of&nbsp;top&nbsp;cnt&nbsp;tasks</tt></dd></dl>
+
+<dl><dt><a name="TaskManager-update"><strong>update</strong></a>(self, id_, properties)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table>
+</body></html>

@@ -8,17 +8,63 @@ from .database import Server
 from .process import Engine
 
 
-def run_database(addr, backend, enable_retry= False, debug=False, log_file=''):    
+__doc__ = '''Usage:
+
+    1) Run database:
+    neutuse run database [-a ADDR] [-b BACKEND] [-d DEBUG] [-r RETRY] [-l LOG]
+    ADDR: Address that the data base will be running, default is 127.0.0.1:5000.
+    BACKEND: Backend of the data base, default is sqlite:test.db.
+    DEBUG: Enable debug mode or not.
+    RETRY: Enable retry mechanism or not. If this is turned on, expired tasks will be fetched again.
+    LOG: Log file.
+    
+    2) Run process:
+    neutuse run process NAME [-a ADDR] [-n NUMBER] [-l LOG]
+    ADDR: Address that the data base is running, default is 127.0.0.1:5000.
+    NAME: The name of the process to run.
+    NUMBER: Numbers of workers.
+    LOG: Log file.
+    
+    3) Post task:
+    neutuse post FILE [-a ADDR]
+    ADDR: Address the database is running, default is 127.0.0.1:5000.
+    FILE: The name of file that describes the task.
+'''
+
+
+def run_database(addr, backend, enable_retry= False, debug=False, log_file=''):
+    '''
+    Args:
+        addr(str): Which address the database will be running. Example: 127.0.0.1:5000
+        backend(str): Which backend the database will be using. Example: Sqlite:test.db
+        enable_retry(bool): If retry is enabled, expired tasks will be fetched by processes
+        debug(bool): Enable debug mode or not
+        log_file(str): Writing logs to which file.
+    '''    
     database = Server(addr, backend, enable_retry, debug, log_file)
     database.run()
 
 
-def run_process(name, addr, log_file='', number=1):    
-    engine = Engine(name, addr, log_file, number)
+def run_process(name, addr, log_file='', num_workers=1):    
+    '''
+    Args:
+        name(str): The name of process to run.
+        addr(str): Which address the database is running. Example: 127.0.0.1:5000
+        num_workers(int): Maximum number of workers 
+        log_file(str): Writing logs to which file.
+    '''
+    engine = Engine(name, addr, log_file, num_workers)
     engine.run()
     
 
 def post_task(addr, data):
+    '''
+    Args:
+        addr(str): Which address the database is running. Example: 127.0.0.1:5000
+        data(dict): Task to post.
+    Returns:
+        bool: success or fail
+    '''
     if not addr.startswith('http'):
         addr = 'http://' + addr
     if not addr.endswith('/'):
@@ -33,30 +79,7 @@ def post_task(addr, data):
 
 
 def help():
-    print('''
-    Usage:
-    1) Run database:
-    neutuse run database [-a ADDR] [-b BACKEND] [-d DEBUG] [-r RETRY] [-l LOG]
-    ADDR: Default is 127.0.0.1:5000
-    BACKEND: Backend data base, default is sqlite:test.db
-    DEBUG: debug mode
-    RETRY: enable retry if tasks are expired
-    LOG: Log file
-    
-    2) Run process:
-    neutuse run process NAME [-a ADDR] [-n NUMBER] [-l LOG]
-    ADDR: which address the database is running
-    Default ADDR is 127.0.0.1:5000
-    NAME: specifies the name of process
-    NUMBER: Numbers of workers
-    LOG: Log file
-    
-    3) Post task:
-    neutuse post FILE [-a ADDR]
-    ADDR: which address the database is running
-    Default ADDR is 127.0.0.1:5000
-    FILE: File describes the task
-    ''')
+    print(__doc__)
     
     
 def main(): 

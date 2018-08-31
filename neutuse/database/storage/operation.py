@@ -1,3 +1,7 @@
+'''
+This file includes database query operations
+'''
+
 class Op():
     pass
 

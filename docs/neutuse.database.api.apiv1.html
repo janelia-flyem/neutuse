@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module neutuse.database.api.apiv1</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="neutuse.html"><font color="#ffffff">neutuse</font></a>.<a href="neutuse.database.html"><font color="#ffffff">database</font></a>.<a href="neutuse.database.api.html"><font color="#ffffff">api</font></a>.apiv1</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/deli/janelia/neutuse/neutuse/database/api/apiv1.py">/home/deli/janelia/neutuse/neutuse/database/api/apiv1.py</a></font></td></tr></table>
+    <p><tt>This&nbsp;file&nbsp;exposes&nbsp;RESTful&nbsp;HTTP&nbsp;APIS&nbsp;to&nbsp;interact&nbsp;with&nbsp;service&nbsp;manager&nbsp;and&nbsp;task&nbsp;manager.</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="json.html">json</a><br>
+</td><td width="25%" valign=top><a href="threading.html">threading</a><br>
+</td><td width="25%" valign=top><a href="time.html">time</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="builtins.html#object">builtins.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="neutuse.database.api.apiv1.html#ServiceMan">ServiceMan</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ServiceMan">class <strong>ServiceMan</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="ServiceMan-__init__"><strong>__init__</strong></a>(self)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<dl><dt><a name="ServiceMan-add_service"><strong>add_service</strong></a>(self, type_, name)</dt></dl>
+
+<dl><dt><a name="ServiceMan-get_service_list"><strong>get_service_list</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="ServiceMan-pulse"><strong>pulse</strong></a>(self, id_)</dt></dl>
+
+<dl><dt><a name="ServiceMan-service_routine"><strong>service_routine</strong></a>(self)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-add_comment"><strong>add_comment</strong></a>(id_)</dt></dl>
+ <dl><dt><a name="-create_service"><strong>create_service</strong></a>()</dt></dl>
+ <dl><dt><a name="-get_tasks"><strong>get_tasks</strong></a>()</dt></dl>
+ <dl><dt><a name="-get_tasks_by_id"><strong>get_tasks_by_id</strong></a>(id_)</dt></dl>
+ <dl><dt><a name="-get_tasks_property_by_id"><strong>get_tasks_property_by_id</strong></a>(id_, property_)</dt></dl>
+ <dl><dt><a name="-post_tasks"><strong>post_tasks</strong></a>()</dt></dl>
+ <dl><dt><a name="-pulse"><strong>pulse</strong></a>(id_)</dt></dl>
+ <dl><dt><a name="-require_logger"><strong>require_logger</strong></a>(func)</dt></dl>
+ <dl><dt><a name="-require_serman"><strong>require_serman</strong></a>(func)</dt></dl>
+ <dl><dt><a name="-require_taskman"><strong>require_taskman</strong></a>(func)</dt></dl>
+ <dl><dt><a name="-service_list"><strong>service_list</strong></a>()</dt></dl>
+ <dl><dt><a name="-top"><strong>top</strong></a>(type_, name, cnt)</dt></dl>
+ <dl><dt><a name="-update_status"><strong>update_status</strong></a>(id_, status)</dt></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>bp</strong> = &lt;flask.blueprints.Blueprint object&gt;<br>
+<strong>current_app</strong> = &lt;LocalProxy unbound&gt;<br>
+<strong>g</strong> = &lt;LocalProxy unbound&gt;<br>
+<strong>request</strong> = &lt;LocalProxy unbound&gt;</td></tr></table>
+</body></html>

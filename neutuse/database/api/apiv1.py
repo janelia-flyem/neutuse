@@ -1,3 +1,8 @@
+'''
+This file exposes RESTful HTTP APIS to interact with service manager and task manager.
+'''
+
+
 from functools import wraps
 import json
 import threading
@@ -193,7 +198,7 @@ def post_tasks():
     try:
         task = Task(**config)
     except Exception as e:
-        rv = 'FAILED: Failed to create the task because of invalid properties' + str(e) 
+        rv = 'FAILED: Failed to create the task because of invalid properties: ' + str(e) 
         g.logger.info(rv)
         return rv, 400
     if g.man.insert(task):
@@ -235,14 +240,14 @@ def add_comment(id_):
         g.logger.info(rv)
         return rv, 400
     task = task[0]
-    comments = task.comment
+    comments = task.comments
     try:
         comments.append(str(comment))
     except Exception as e:
-        rv = 'FAILED: Invalid comment format: ' + str(e) 
+        rv = 'FAILED: Invalid comments format: ' + str(e) 
         g.logger.info(rv)
         return rv, 400
-    if g.man.update(id_, {'comment' : json.dumps(comments)}):
+    if g.man.update(id_, {'comments' : json.dumps(comments)}):
         return jsonify(g.man.query({'id' : id_})[0])
     else:
         rv = 'FAILED: Failed to add the comment'
