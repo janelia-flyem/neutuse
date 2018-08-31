@@ -12,25 +12,23 @@ __doc__ = '''Usage:
 
     1) Run database:
     neutuse run database [-a ADDR] [-b BACKEND] [-d DEBUG] [-r RETRY] [-l LOG]
-    ADDR: Default is 127.0.0.1:5000
-    BACKEND: Backend data base, default is sqlite:test.db
-    DEBUG: debug mode
-    RETRY: enable retry if tasks are expired
-    LOG: Log file
+    ADDR: Address that the data base will be running, default is 127.0.0.1:5000.
+    BACKEND: Backend of the data base, default is sqlite:test.db.
+    DEBUG: Enable debug mode or not.
+    RETRY: Enable retry mechanism or not. If this is turned on, expired tasks will be fetched again.
+    LOG: Log file.
     
     2) Run process:
     neutuse run process NAME [-a ADDR] [-n NUMBER] [-l LOG]
-    ADDR: which address the database is running
-    Default ADDR is 127.0.0.1:5000
-    NAME: specifies the name of process
-    NUMBER: Numbers of workers
-    LOG: Log file
+    ADDR: Address that the data base is running, default is 127.0.0.1:5000.
+    NAME: The name of the process to run.
+    NUMBER: Numbers of workers.
+    LOG: Log file.
     
     3) Post task:
     neutuse post FILE [-a ADDR]
-    ADDR: which address the database is running
-    Default ADDR is 127.0.0.1:5000
-    FILE: File describes the task
+    ADDR: Address the database is running, default is 127.0.0.1:5000.
+    FILE: The name of file that describes the task.
 '''
 
 
