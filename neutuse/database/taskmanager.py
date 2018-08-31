@@ -7,6 +7,10 @@ from .storage.operation import Equal, And, Or, Not, Greater
 
 class TaskManager():
     
+    '''
+    This class manages tasks and exposes common operating functions such as insert, query and update tasks.
+    '''
+    
     def __init__(self, db, check_interval=10, waiting_time=5, enable_retry=False):
         assert( isinstance(db, StorageBase) )
         self.db = db
@@ -54,6 +58,15 @@ class TaskManager():
         timer.start()
         
     def top(self, cnt, type_, name):
+        '''
+        This function query top n tasks based on their priorities
+        Args:
+            cnt(int): Number of tasks to fetch
+            type_(str): The type of tasks
+            name(str): The name of tasks
+        Returns:
+            list: array of top cnt tasks
+        '''
         f = Equal('status','submitted')
         if self.enable_retry:
             f = Or(f,Equal('status', 'expired'))

@@ -5,7 +5,11 @@ from .storagebase import StorageBase
 from .operation import *
 
 class Sqlite(StorageBase):
-
+    
+    '''
+    This class implements task's backend using sqlite database.
+    '''
+    
     def __init__(self, name, model):
         super(Sqlite, self).__init__()
         self.name = name
@@ -20,11 +24,11 @@ class Sqlite(StorageBase):
                         config text,
                         status text,
                         priority int,
-                        life_span real,
+                        life_span int,
                         max_tries int,
                         submitted real,
                         last_updated real,
-                        comment text,
+                        comments text,
                         user text)
                         ''')
         conn.commit()
@@ -38,7 +42,7 @@ class Sqlite(StorageBase):
                     (task.id, task.type, task.name, task.description,
                     json.dumps(task.config), task.status,task.priority,
                     task.life_span, task.max_tries, task.submitted, 
-                    task.last_updated, json.dumps(task.comment), task.user))
+                    task.last_updated, json.dumps(task.comments), task.user))
             conn.commit()
             conn.close()
         except Exception as e:
@@ -107,7 +111,7 @@ class Sqlite(StorageBase):
                 'description':obj[3], 'config':json.loads(obj[4]),
                 'status':obj[5], 'priority':obj[6], 'life_span':obj[7],
                 'max_tries':obj[8], 'submitted':obj[9],
-                'last_updated':obj[10], 'comment':json.loads(obj[11]), 'user':obj[12]}
+                'last_updated':obj[10], 'comments':json.loads(obj[11]), 'user':obj[12]}
         return self.model(**dct)
 
     def _filters2sql(self, filters):

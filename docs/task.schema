@@ -1,0 +1,14 @@
+Field       | Type     |Required to post
+id          | int      |No (database will create this field)
+type        | str      |Yes
+name        | str      |Yes
+description | str      |No
+config      | dict     |Yes
+status      | string   |No
+priority    | int      |No
+life_span   | float    |No
+max_tries   | int      |No
+submitted   | str      |No
+last_updated| str      |No
+comment     | list     |No
+user        | str      |No
