@@ -42,11 +42,14 @@ class TaskProcessor():
         rv = rq.post(self.addr + '/api/v1/services', headers={'Content-Type' : 'application/json'}, data=json.dumps(service))
         self.id = rv.json()['id']
         self.logger.info('Register service {}, status: {}'.format(json.dumps(service),str(rv.status_code == 200)))
+        if rv.status_code != 200:
+            self.logger.info(rv.text)
     
     def pulse(self):
         rv = rq.post(self.addr + '/api/v1/services/{}/pulse'.format(self.id))
         self.logger.info('Pulse, status: {}'.format(str(rv.status_code  == 200)))
         if rv.status_code != 200:
+            self.logger.info(rv.text)
             self.register()
         timer = threading.Timer(60, self.pulse)
         timer.start()
@@ -59,6 +62,8 @@ class TaskProcessor():
         url = self.addr + '/api/v1/tasks/{}/status/processing'.format(task['id'])
         rv = rq.post(url)
         self.logger.info('Send processing message for task {}, status: {}'.format(task['id'],str(rv.status_code ==200)))
+        if rv.status_code !=200 :
+            self.logger.info(rv.text)
         
     def fail(self, task):
         with self.lock:
@@ -66,6 +71,8 @@ class TaskProcessor():
         url = self.addr + '/api/v1/tasks/{}/status/failed'.format(task['id'])
         rv = rq.post(url)
         self.logger.info('Send failed message for task {}, status: {}'.format(task['id'],str(rv.status_code ==200)))
+        if rv.status_code !=200 :
+            self.logger.info(rv.text)
         
     def success(self, task):
         with self.lock:
@@ -73,7 +80,9 @@ class TaskProcessor():
         url = self.addr + '/api/v1/tasks/{}/status/done'.format(task['id'])
         rv = rq.post(url)
         self.logger.info('Send success message for task {}, status: {}'.format(task['id'],str(rv.status_code ==200)))
-        
+        if rv.status_code !=200 :
+            self.logger.info(rv.text)
+            
     def verify(self, config):
         for key in self.__schema__:
             if (self.__schema__[key]['required']):
@@ -95,7 +104,8 @@ class TaskProcessor():
                     query_url = self.addr + '/api/v1/tasks/top/{}/{}/{}'.format(self.type, self.name, cnt_to_fetch)
                     rv = rq.get(query_url)
                     self.logger.info('Fetch {} tasks from database, status: {}'.format(cnt_to_fetch, rv.status_code == 200))
-                    
+                    if rv.status_code == 400:
+                        self.logger.info(rv.text)
                     if rv.status_code == 200 and len(rv.json()) > 0:
                         tasks = []
                         for task in rv.json():
@@ -114,7 +124,7 @@ class TaskProcessor():
                             self.logger.info('Start processing task {}'.format(task['id']))
                             threading.Thread(target=self.process, args=(task,)).start()
                     else:
-                        time.sleep(3)
+                        time.sleep(10)
             except Exception as e:
                 print(e)
     
