@@ -37,7 +37,7 @@ function update(){
                         content+="<td style='word-wrap:break-word;'>"+date.toLocaleString()+"</td>";
                         date.setTime(value["last_updated"]*1000);
                         content+="<td style='word-wrap:break-word;'>"+date.toLocaleString()+"</td>";                      
-                        content+="<td style='word-wrap:break-word;'>"+JSON.stringify(value["comment"])+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+JSON.stringify(value["comments"])+"</td>";
                         content+="<td style='word-wrap:break-word;'>"+value["type"]+"</td>";
                         content+="<td style='word-wrap:break-word;'>"+value["name"]+"</td>";
                         content+="<td style='word-wrap:break-word;'>"+value["user"]+"</td>";
@@ -69,7 +69,7 @@ $(document).ready(function(){
             <th>max_tries</th>
             <th>submitted</th>
             <th>last_updated</th>         
-            <th>comment</th>
+            <th>comments</th>
             <th>type</th>
             <th>name</th>
             <th>user</th>
