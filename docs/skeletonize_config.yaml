@@ -1,0 +1,3 @@
+number: 2
+log: /tmp/neutuse_skeletonize.log
+command: neutu

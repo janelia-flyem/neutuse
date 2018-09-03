@@ -62,7 +62,13 @@ def require_logger(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         g.logger = current_app.config['logger']
-        g.logger.info(request.method + ' ' + request.url)
+        params = request.args
+        info = request.method + ' ' + request.base_url 
+        if 'u' in params:
+            info += ' user:{}'.format(params['u'])
+        if 'app' in params:
+            info += ' app:{}'.format(params['app'])
+        g.logger.info(info)
         if request.method == 'POST':
             g.logger.info('POSTED DATA: {}'.format(request.json))
         return func(*args, **kwargs)
