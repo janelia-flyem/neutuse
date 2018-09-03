@@ -9,7 +9,7 @@ import threading
 import time
 
 from flask import Blueprint, request, jsonify, abort, current_app, g
-from ..task import Task
+from .task import Task
 
 bp = Blueprint('tasks', __name__)
 

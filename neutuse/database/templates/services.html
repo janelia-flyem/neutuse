@@ -1,0 +1,47 @@
+<html>
+<head>
+<title>Computing Service</title>
+
+<link rel="stylesheet" href="{{url_for('static',filename='css/bootstrap.min.css')}}">
+<script type="text/javascript" src="{{url_for('static',filename='jquery-3.3.1.min.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static',filename='js/bootstrap.min.js')}}"></script>
+<script type="text/javascript">
+
+function update(){
+    $.get(" {{config['addr']}}/api/v1/services",
+                function(result){
+                    var date=new Date();
+                    var content="";
+                    $.each(result,function(key,value){
+                        content+="<tr class='item'>";
+                        content+="<td style='word-wrap:break-word;'>"+value["id"]+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+value["type"]+"</td>";
+                        content+="<td style='word-wrap:break-word;'>"+value["name"]+"</td>";
+                        date.setTime(value["last_active"]*1000);
+                        content+="<td style='word-wrap:break-word;'>"+date.toLocaleString()+"</td>";                   
+                    });
+                    content+="</table>";
+                    $('tr').remove('.item');
+                    $('#content').append(content);
+                }
+    );
+};
+$(document).ready(function(){
+    update();
+    setInterval("update()",5000);
+});
+</script>
+</head>
+<body>
+<table id ="content" class="table table-bordered table-hover" style="table-layout:fixed">
+    <thead class='thead-dark'>
+        <tr>
+            <th>id</th>
+            <th>type</th>
+            <th>name</th>
+            <th>last_active</th>
+        </tr>
+    </thead>
+</table>
+</body>
+</html>

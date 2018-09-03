@@ -3,8 +3,8 @@ import logging.handlers
 
 from flask import Flask
 
-from . import webclient 
-from .api import apiv1
+from . import web
+from . import apiv1
 from .storage import Sqlite
 from .task import Task
 from .taskmanager import TaskManager
@@ -66,7 +66,7 @@ class Server():
         self.app.config['db'] = db
         self.app.config['task_man'] = TaskManager(db, check_interval=10, waiting_time=5, enable_retry=self.enable_retry)
         
-        self.app.register_blueprint(webclient.bp, url_prefix='/client')
+        self.app.register_blueprint(web.bp, url_prefix='/')
         self.app.register_blueprint(apiv1.bp, url_prefix='/api/v1')
         
         self.logger.info('start database service at {}'.format(self.addr))
