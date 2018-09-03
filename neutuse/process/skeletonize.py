@@ -18,15 +18,11 @@ class Skeletonize(TaskProcessor):
     'output' : {'required' : False, 'type' : str}
     }
     
-    def __init__(self, addr, config):
-        log = config.get('log','')
-        num_workers = config.get('number',1)
-        self.cmd = config.get('command','neutu')
-        super(Skeletonize, self).__init__(addr, 'dvid', 'skeletonize', log, num_workers)
-        
+    __type_name__=('dvid','skeletonize')
+            
     def process(self, task):
         config = task['config']
-        cmd = self.cmd
+        cmd = self.config.get('command','neutu')
         cmd += ' --command --skeletonize '
         cmd += config['input']
         if 'force_update' in config and config['force_update']:

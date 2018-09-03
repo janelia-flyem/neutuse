@@ -7,6 +7,8 @@ import logging.handlers
 
 import requests as rq 
 from requests.exceptions import ConnectionError
+
+
 class TaskProcessor():
     
     '''
@@ -21,22 +23,27 @@ class TaskProcessor():
     '''Subclasses should define the __chema__ variable. It's used to verify tasks.'''
     __schema__ = {}
     
+    '''Subclasses should define __type_name__ variable.'''
+    __type_name__= ('','')
     
-    def __init__(self, addr, type_, name, log_file='', num_workers=1):
+    
+    def __init__(self, config):
         '''
         Args:
             addr(str): The address that database if running.
-            type_(str): The type of tasks this class will process. 
-            name(str): The name of tasks this class will process.
             log_file(str): Name of logging file.
             num_workers(int): Number of workers.
         '''
-        self.addr = addr
-        self.type = type_
-        self.name = name
-        self.num_workers = num_workers
+        self.type = self.__type_name__[0]
+        self.name = self.__type_name__[1]
+        self.config = config
+        assert('addr' in config)
+        self.addr = config['addr']
+        if not self.addr.startswith('http'):
+            self.addr = 'http://' + self.addr
+        self.log_file = config.get('log','')
+        self.num_workers = config.get('number',1)
         self.cur_num_workers = 0
-        self.log_file = log_file
         self.lock = threading.Lock()
         self._init_logger()
         self._register()
@@ -55,7 +62,6 @@ class TaskProcessor():
             self.logger.addHandler(fh)
     
     def _register(self):
-    
         service = {'type':self.type,'name':self.name}
         rv = rq.post(self.addr + '/api/v1/services', headers={'Content-Type' : 'application/json'}, data=json.dumps(service))
         self.id = rv.json()['id']
@@ -113,20 +119,25 @@ class TaskProcessor():
                     if not isinstance(config[key], self.__schema__[key]['type']):
                         return False
         return True
-              
+             
+    def _fetch_tasks(self):
+        cnt_to_fetch  = self.num_workers - self.cur_num_workers
+        query_url = self.addr + '/api/v1/tasks/top/{}/{}/{}'.format(self.type, self.name, cnt_to_fetch)
+        rv = rq.get(query_url)
+        self.logger.info('Fetch {} tasks from database, status: {}'.format(cnt_to_fetch, rv.status_code == 200))
+        if rv.status_code == 200:
+            return rv.json()
+        self.logger.info(rv.text)
+        return []
+
     def run(self):
         while True:
             try:
                 if self.cur_num_workers < self.num_workers:
-                    cnt_to_fetch  = self.num_workers - self.cur_num_workers
-                    query_url = self.addr + '/api/v1/tasks/top/{}/{}/{}'.format(self.type, self.name, cnt_to_fetch)
-                    rv = rq.get(query_url)
-                    self.logger.info('Fetch {} tasks from database, status: {}'.format(cnt_to_fetch, rv.status_code == 200))
-                    if rv.status_code == 400:
-                        self.logger.info(rv.text)
-                    if rv.status_code == 200 and len(rv.json()) > 0:
+                    rv = self._fetch_tasks()
+                    if len(rv)>0:
                         tasks = []
-                        for task in rv.json():
+                        for task in rv:
                             if self._verify(task['config']):
                                 tasks.append(task)
                             else:
@@ -134,7 +145,6 @@ class TaskProcessor():
                                 self.log(task,'invalid schema')
                                 url = self.addr + '/api/v1/tasks/{}/status/failed'.format(task['id'])
                                 rq.post(url)
-
                         for task in tasks:
                             self._send_processing(task)
                             with self.lock:
