@@ -1,4 +1,4 @@
-from .skeletonize import Skeletonize
+from .spec.skeletonize.skeletonize import Skeletonize
 
 class Engine():
     
