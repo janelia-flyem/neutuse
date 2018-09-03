@@ -6,7 +6,7 @@ setup(
     packages = find_packages(exclude = ["*.pyc"] ),
     include_package_data = True,
     zip_safe = False,
-    install_requires = ['Flask','Requests'],
+    install_requires = ['Flask','Requests','PyYaml'],
     entry_points = {
     
         'console_scripts':['neutuse=neutuse:main']

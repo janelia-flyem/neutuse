@@ -43,16 +43,15 @@ class TaskProcessor():
         self._pulse()
     
     def _init_logger(self):
-        self.logger = logging.getLogger('neutuse')
+        self.logger = logging.getLogger('neutuse'+self.log_file)
         self.logger.setLevel(logging.INFO)
-        fmt = "%(asctime)-15s %(levelname)s %(filename)s.%(lineno)d >>>> %(message)s"
+        fmt = "%(asctime)-15s %(levelname)s %(filename)s.%(lineno)d %(threadName)s>>>> %(message)s"
         sh = logging.StreamHandler()
         sh.setFormatter(logging.Formatter(fmt))
         self.logger.addHandler(sh)
         if self.log_file != '':
             fh = logging.handlers.RotatingFileHandler(self.log_file,maxBytes = 1024*1024*100, backupCount = 3)    
             fh.setFormatter(logging.Formatter(fmt))
-            werk_logger.addHandler(fh)
             self.logger.addHandler(fh)
     
     def _register(self):
