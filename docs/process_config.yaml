@@ -1,0 +1,11 @@
+address:
+    host: 127.0.0.1
+    port: 5000
+number: 1
+log: /tmp/neutuse.log
+process:
+    - name: skeletonize
+      config: skeletonize_config.yaml    
+
+    - name: skeletonize
+      config: skeletonize_config2.yaml
