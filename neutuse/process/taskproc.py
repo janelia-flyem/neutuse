@@ -6,7 +6,7 @@ import logging
 import logging.handlers
 
 import requests as rq 
-
+from requests.exceptions import ConnectionError
 class TaskProcessor():
     
     '''
@@ -143,6 +143,9 @@ class TaskProcessor():
                             threading.Thread(target=self.process, args=(task,)).start()
                     else:
                         time.sleep(10)
+            except ConnectionError as e:
+                self.logger.error(e)
+                time.sleep(60*3)
             except Exception as e:
                 self.logger.error(e)
     
