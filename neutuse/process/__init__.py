@@ -1,5 +1,4 @@
 from .engine import Engine
-# from .spec.skeletonize import skeletonize
 
 import glob
 import os
