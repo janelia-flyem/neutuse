@@ -49,11 +49,12 @@ function update(){
                     $('tr').remove('.item');
                     $('#content').append(content);
                 }
-    );
+    ).fail(function(){$('tr').remove('.item');});
 };
 $(document).ready(function(){
     update();
     setInterval("update()",5000);
+    $(".form-control").change(function(){update();});
 });
 </script>
 </head>
