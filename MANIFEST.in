@@ -1,4 +1,4 @@
 include neutuse/neutuse
-graft neutuse/taskman/webclient/static
-graft neutuse/taskman/webclient/templates
+graft neutuse/database/static
+graft neutuse/database/templates
 global-exclude *.pyc
