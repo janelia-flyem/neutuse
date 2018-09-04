@@ -24,7 +24,7 @@ class TaskManager():
         task.id = self.db.next_available_id()
         return self.db.insert(task)
 
-    def query(self, filters):
+    def query(self, filters,odered_by='',desc=False):
         fs = [ Equal(k, filters[k]) for k in filters.keys() ]
         if len(fs) < 1:
             f = []
@@ -32,7 +32,7 @@ class TaskManager():
             f = fs[0]
             for i in range(1, len(fs)):
                 f = And(f, fs[i])
-        return self.db.query(f)
+        return self.db.query(f,odered_by,desc)
 
     def update(self, id_, properties):
         if 'status' in properties:

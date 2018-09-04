@@ -5,7 +5,38 @@
 <link rel="stylesheet" href="{{url_for('static',filename='css/bootstrap.min.css')}}">
 <script type="text/javascript" src="{{url_for('static',filename='jquery-3.3.1.min.js')}}"></script>
 <script type="text/javascript" src="{{url_for('static',filename='js/bootstrap.min.js')}}"></script>
+<style>
+table{table-layout:fixed;word-break:break-all;}
+table td div{
+    height:80px;
+    overflow:auto;
+}
+</style>
 <script type="text/javascript">
+
+var cur_num = 0;
+
+function page_next(){
+    cur_num += 1;
+    $("#cur_page").val(cur_num);
+    update();
+    if(cur_num > 0 ){
+        $("#prev").removeClass("disabled");
+    }
+}
+
+function page_prev(){
+    cur_num -=1 ;
+    if (cur_num < 0){
+    cur_num = 0 ;
+    }
+    if(cur_num == 0){
+        $("#prev").addClass("disabled");
+    }
+    $("#cur_page").val(cur_num);
+    update();
+}
+
 
 function update(){
     var data={};
@@ -21,86 +52,116 @@ function update(){
     if ($('#status').val()!='all'){
         data['status']=$('#status').val();
     }
-    $.get(" {{config['addr']}}/api/v1/tasks",data,
+    $.get(" {{config['addr']}}/api/v1/tasks/pagination/last_updated/20/"+cur_num,data,
                 function(result){
                     var date=new Date();
                     var content="";
                     $.each(result,function(key,value){
                         content+="<tr class='item'>";
-                        content+="<td style='word-wrap:break-word;'>"+value["id"]+"</td>";
-                        content+="<td style='word-wrap:break-word;'>"+value["description"]+"</td>";
-                        content+="<td style='word-wrap:break-word;'>"+JSON.stringify(value["config"])+"</td>";
-                        content+="<td style='word-wrap:break-word;'>"+value["priority"]+"</td>";
-                        content+="<td style='word-wrap:break-word;'>"+value["life_span"]+"</td>";
-                        content+="<td style='word-wrap:break-word;'>"+value["max_tries"]+"</td>";
+                        content+="<td style='word-wrap:break-word;'><div>"+value["id"]+"</div></td>";
+                        content+="<td style='word-wrap:break-word;'><div>"+value["description"]+"</div></td>";
+                        content+="<td style='word-wrap:break-word;'><div>"+JSON.stringify(value["config"])+"</div></td>";
+                        content+="<td style='word-wrap:break-word;'><div>"+value["priority"]+"</div></td>";
+                        content+="<td style='word-wrap:break-word;'><div>"+value["life_span"]+"</div></td>";
+                        content+="<td style='word-wrap:break-word;'><div>"+value["max_tries"]+"</div></td>";
                         date.setTime(value["submitted"]*1000);
-                        content+="<td style='word-wrap:break-word;'>"+date.toLocaleString()+"</td>";
+                        content+="<td style='word-wrap:break-word;'><div>"+date.toLocaleString()+"</div></td>";
                         date.setTime(value["last_updated"]*1000);
-                        content+="<td style='word-wrap:break-word;'>"+date.toLocaleString()+"</td>";                      
-                        content+="<td style='word-wrap:break-word;'>"+JSON.stringify(value["comments"])+"</td>";
-                        content+="<td style='word-wrap:break-word;'>"+value["type"]+"</td>";
-                        content+="<td style='word-wrap:break-word;'>"+value["name"]+"</td>";
-                        content+="<td style='word-wrap:break-word;'>"+value["user"]+"</td>";
-                        content+="<td style='word-wrap:break-word;'>"+value["status"]+"</td>";
+                        content+="<td style='word-wrap:break-word;'><div>"+date.toLocaleString()+"</div></td>";                      
+                        content+="<td style='word-wrap:break-word;'><div>"+JSON.stringify(value["comments"])+"</div></td>";
+                        content+="<td style='word-wrap:break-word;'><div>"+value["type"]+"</div></td>";
+                        content+="<td style='word-wrap:break-word;'><div>"+value["name"]+"</div></td>";
+                        content+="<td style='word-wrap:break-word;'><div>"+value["user"]+"</div></td>";
+                        content+="<td style='word-wrap:break-word;'><div>"+value["status"]+"</div></td>";
                         content+="</tr>";
                         
                     });
                     content+="</table>";
                     $('tr').remove('.item');
                     $('#content').append(content);
+                    $("#next").removeClass("disabled");
                 }
-    ).fail(function(){$('tr').remove('.item');});
+    ).fail(function(){
+        $('tr').remove('.item');
+        $("#next").addClass("disabled");
+    });
 };
 $(document).ready(function(){
+    $("#cur_page").val(cur_num);
     update();
     setInterval("update()",5000);
-    $(".form-control").change(function(){update();});
+    $(".form-control").change(function(){
+        cur_num = 0;
+        $("#cur_page").val(cur_num);
+        $("#prev").addClass("disabled");
+        update();
+    });
+    $("#cur_page").change(function(){
+        cur_num = parseInt($("#cur_page").val());
+        if(cur_num <= 0){
+            $("#prev").addClass("disabled");
+        }
+        else{
+            $("#prev").removeClass("disabled");
+        }
+        update();
+    });
 });
 </script>
 </head>
-<body>
-<table id ="content" class="table table-bordered table-hover" style="table-layout:fixed">
-    <thead class='thead-dark'>
-        <tr>
-            <th>id</th>
-            <th>description</th>
-            <th>config</th>
-            <th>priority</th>
-            <th>life_span</th>
-            <th>max_tries</th>
-            <th>submitted</th>
-            <th>last_updated</th>         
-            <th>comments</th>
-            <th>type</th>
-            <th>name</th>
-            <th>user</th>
-            <th>status</th>
-        </tr>
-    </thead>
-    <tr class="table-info">
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td><input id="type" type="text" class="form-control"></td>            
-        <td><input id="name" type="text" class="form-control"></td>
-        <td><input id="user" type="text" class="form-control"></td>
-        <td>
-            <select id="status" class='form-control'>
-                <option>all</option>
-                <option>submitted</option>
-                <option>wating</option>
-                <option>processing</option>
-                <option>done</option>
-                <option>failed</option>
-            </select>
-        </td>
-    </tr>
-</table>
+
+
+<body class="container-fluid" style="padding:0px; spacing:0px;">
+        <table id ="content" class="table table-bordered table-hover" >
+            <thead class='thead-dark'>
+                <tr>
+                    <th >id</th>
+                    <th >description</th>
+                    <th >config</th>
+                    <th >priority</th>
+                    <th >life_span</th>
+                    <th >max_tries</th>
+                    <th >submitted</th>
+                    <th >last_updated</th>         
+                    <th >comments</th>
+                    <th >type</th>
+                    <th >name</th>
+                    <th >user</th>
+                    <th >status</th>
+                </tr>
+            </thead>
+            <tr class="table-info">
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td><input id="type" type="text" class="form-control"></td>            
+                <td><input id="name" type="text" class="form-control"></td>
+                <td><input id="user" type="text" class="form-control"></td>
+                <td>
+                    <select id="status" class='form-control'>
+                        <option>all</option>
+                        <option>submitted</option>
+                        <option>wating</option>
+                        <option>processing</option>
+                        <option>done</option>
+                        <option>failed</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
+        <div style="width:60%;padding-left:40%">
+            <ul class="pagination pagination-lg">
+                <li class="page-item disabled" id="prev"><a class="page-link" href="#" onclick="page_prev()">Previous</a></li>
+                <li class="page-item"><input class="page-link" id="cur_page" size="8" style="text-align:center"></input></li>
+                <li class="page-item" id="next"><a class="page-link" href="#" onclick="page_next()">Next</a></li>
+            </ul>
+        </div>
 </body>
+
 </html>

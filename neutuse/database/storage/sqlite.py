@@ -75,7 +75,7 @@ class Sqlite(StorageBase):
             return False
         return True
 
-    def query(self,filters):
+    def query(self,filters,odered_by='',desc=False):
         try:
             conn = sql.connect(self.name)
             cur = conn.cursor()
@@ -84,6 +84,11 @@ class Sqlite(StorageBase):
             else:
                 cmd = 'SELECT * FROM task WHERE '
                 cmd += self._filters2sql(filters)
+            if odered_by != '':
+                cmd +=' ORDER BY ' + odered_by
+                if desc:
+                    cmd +=' DESC'
+            print(cmd)
             cur.execute(cmd)
             rv = []
             for i in cur.fetchall():
