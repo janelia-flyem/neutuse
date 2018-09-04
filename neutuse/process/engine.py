@@ -1,4 +1,4 @@
-from .skeletonize import Skeletonize
+from .taskproc import TaskProcessor
 
 class Engine():
     
@@ -6,7 +6,7 @@ class Engine():
     This class is the engine of running different processes.
     '''
     
-    def __init__(self, name, addr, config):
+    def __init__(self, name, config):
         '''
         Args:
             name(str): The name of process to run
@@ -15,11 +15,12 @@ class Engine():
         '''
         self.name = name
         self.config = config
-        self.addr = addr if addr.startswith('http') else 'http://' + addr
         
     def run(self):
         '''
         Start running the process
         '''
-        if self.name == 'skeletonize':
-            Skeletonize(self.addr, self.config).run()
+        for subclass in TaskProcessor.__subclasses__():
+            name = subclass.__type_name__[1]
+            if name == self.name:
+                subclass(self.config).run()
