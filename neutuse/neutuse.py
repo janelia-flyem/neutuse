@@ -92,7 +92,7 @@ def main():
         help()
         return
     
-    if sys.argv[1] == 'run' and num_args >= 3 :
+    if (sys.argv[1] == 'run' or sys.argv[1] == 'start') and num_args >= 3 :
     
         if sys.argv[2] == 'database':
             parser.add_argument('-c', '--config', default='')
@@ -121,11 +121,11 @@ def main():
             parser.add_argument('-a', '--addr',  default='127.0.0.1:5000')
             parser.add_argument('--number',  default=1)
             parser.add_argument('-l', '--log', default='')
-            parser.add_argument('--config', type=str, default='')
             args=parser.parse_args(sys.argv[3:])
             if args.config != '':
                 with open(args.config) as f:
                     config = yaml.load(f)
+                    print(config)
                     addr = config.get('address',{'host': '127.0.0.1', 'port':5000})
                     addr = addr['host'] + ':' + str(addr['port'])
                     log = config.get('log','')
@@ -144,7 +144,7 @@ def main():
                     for t in threads:
                         t.start()
             else:
-                config = {'log': args.log, 'number': args.numbers}
+                config = {'log': args.log, 'number': args.number}
                 run_process(args.name, args.addr, config)
             
         else:
