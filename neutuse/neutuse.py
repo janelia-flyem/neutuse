@@ -48,14 +48,13 @@ def run_database(addr, backend, enable_retry= False, debug=False, log_file=''):
     database.run()
 
 
-def run_process(name, addr, config):    
+def run_process(name, config):    
     '''
     Args:
         name(str): The name of process to run.
-        addr(str): Which address the database is running. Example: 127.0.0.1:5000
         config(dict): Configs passed to process
     '''
-    engine = Engine(name, addr, config)
+    engine = Engine(name, config)
     engine.run()
     
 
@@ -139,14 +138,15 @@ def main():
                             p_config['log'] = log
                         if 'number' not in p_config:
                             p_config['number'] = number
-                        t = threading.Thread(target = run_process, args=(name, addr, p_config))
+                        if 'address' not in p_config:
+                            p_config['addr'] = addr
+                        t = threading.Thread(target = run_process, args=(name, p_config))
                         threads.append(t)
                     for t in threads:
                         t.start()
             else:
-                config = {'log': args.log, 'number': args.number}
-                run_process(args.name, args.addr, config)
-            
+                config = {'addr':args.addr, 'log': args.log, 'number': args.number}
+                run_process(args.name, config)
         else:
             help() 
 
