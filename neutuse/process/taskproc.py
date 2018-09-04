@@ -4,6 +4,7 @@ import time
 from abc import ABCMeta,abstractmethod
 import logging
 import logging.handlers
+import traceback
 
 import requests as rq 
 from requests.exceptions import ConnectionError
@@ -157,6 +158,7 @@ class TaskProcessor():
                 self.logger.error(e)
                 time.sleep(60*3)
             except Exception as e:
+                traceback.print_tb(e)
                 self.logger.error(e)
     
     @abstractmethod

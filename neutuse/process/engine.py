@@ -20,6 +20,7 @@ class Engine():
         '''
         Start running the process
         '''
+        print("Process:", TaskProcessor.__subclasses__())
         for subclass in TaskProcessor.__subclasses__():
             name = subclass.__type_name__[1]
             if name == self.name:
