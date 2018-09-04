@@ -5,6 +5,7 @@ import requests as rq
 
 from .taskproc import TaskProcessor
 
+
 class Skeletonize(TaskProcessor):
     
     '''
@@ -19,7 +20,8 @@ class Skeletonize(TaskProcessor):
     }
     
     __type_name__=('dvid','skeletonize')
-            
+    
+        
     def process(self, task):
         config = task['config']
         cmd = self.config.get('command','neutu')
