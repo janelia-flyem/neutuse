@@ -18,10 +18,13 @@ class TaskManager():
         self.waiting_time = waiting_time
         self.enable_retry = enable_retry
         self._check_routine()
+        self.locks = {}
         
     def insert(self, task):
         assert( isinstance(task,Task) )
-        task.id = self.db.next_available_id()
+        lock = self.locks.setdefault('id',threading.Lock())
+        with lock:
+            task.id = self.db.next_available_id()
         return self.db.insert(task)
 
     def query(self, filters,odered_by='',desc=False):
@@ -67,16 +70,18 @@ class TaskManager():
         Returns:
             list: array of top cnt tasks
         '''
-        f = Equal('status','submitted')
-        if self.enable_retry:
-            f = Or(f,Equal('status', 'expired'))
-        f = And(f, Greater('max_tries', 0))
-        f = And(f, Equal('type', type_))
-        f = And(f, Equal('name', name))
-        tasks = self.db.query(f)
-        scores = [ {'id' : task.id,'score' : self._score(task) } for task in tasks ]
-        rvs = heapq.nlargest(cnt, scores,key = lambda s : s['score'])
-        tasks = [ self.db.query(Equal('id', t['id']))[0] for t in rvs]
-        for t in tasks:
-            self.update(t.id, {'status' : 'waiting'})
-        return tasks
+        lock = self.locks.setdefault((type_,name),threading.Lock())
+        with lock:
+            f = Equal('status','submitted')
+            if self.enable_retry:
+                f = Or(f,Equal('status', 'expired'))
+            f = And(f, Greater('max_tries', 0))
+            f = And(f, Equal('type', type_))
+            f = And(f, Equal('name', name))
+            tasks = self.db.query(f)
+            scores = [ {'id' : task.id,'score' : self._score(task) } for task in tasks ]
+            rvs = heapq.nlargest(cnt, scores,key = lambda s : s['score'])
+            tasks = [ self.db.query(Equal('id', t['id']))[0] for t in rvs]
+            for t in tasks:
+                self.update(t.id, {'status' : 'waiting'})
+            return tasks

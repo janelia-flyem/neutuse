@@ -89,6 +89,7 @@ class TaskProcessor():
     def _send_processing(self, task):
         url = neutuse_url.get_task_ack_url(self.addr,task['id'])
         rv = rq.post(url)
+        self.log(task,'service_id: {}'.format(self.id))
         self.logger.info('Send processing message for task {}, status: {}'.format(task['id'],str(rv.status_code ==200)))
         if rv.status_code !=200 :
             self.logger.info(rv.text)

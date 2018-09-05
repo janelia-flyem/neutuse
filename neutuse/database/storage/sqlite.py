@@ -17,7 +17,7 @@ class Sqlite(StorageBase):
         conn = sql.connect(self.name)
         conn.execute('''
                         CREATE TABLE IF NOT EXISTS task (
-                        id int,
+                        id int PRIMARY KEY,
                         type text,
                         name text,
                         description text,
