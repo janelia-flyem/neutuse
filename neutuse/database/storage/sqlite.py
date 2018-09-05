@@ -88,7 +88,6 @@ class Sqlite(StorageBase):
                 cmd +=' ORDER BY ' + odered_by
                 if desc:
                     cmd +=' DESC'
-            print(cmd)
             cur.execute(cmd)
             rv = []
             for i in cur.fetchall():
