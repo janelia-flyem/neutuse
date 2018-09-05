@@ -23,7 +23,7 @@ class StorageBase():
         pass
 
     @abstractmethod
-    def query(self, filters):
+    def query(self, filters,odered_by='',desc=False):
         pass
 
     @abstractmethod

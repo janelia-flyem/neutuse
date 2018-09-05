@@ -126,6 +126,33 @@ def pulse(id_):
 
 
 #query
+@bp.route('/tasks/pagination/<string:odered_by>/<int:page_size>/<int:page_num>', methods=['GET'])
+@bp.route('/tasks/pagination/<string_odered_by>/<int:page_size><int:page_num>', methods=['GET'])
+@require_taskman
+@require_logger
+def get_tasks_pagination(odered_by, page_size, page_num):
+    filters = request.args
+    if odered_by not in Task.__mapping__.keys():
+            rv  = 'FAILED: Invalid odered_by key word'
+            g.logger.info(rv)
+            return rv, 400 
+    for key in filters.keys():
+        if key not in Task.__mapping__.keys():
+            rv  = 'FAILED: Invalid query filters'
+            g.logger.info(rv)
+            return rv, 400
+    rv = g.man.query(filters,odered_by=odered_by,desc=True)
+    start = page_num*page_size
+    end = (page_num+1)*page_size
+    rv = rv[start:end]
+    if len(rv) == 0:
+        rv = 'FAILED: No tasks meet the conditions'
+        g.logger.info(rv)
+        return rv, 400
+    return jsonify(rv)
+    
+
+#query
 @bp.route('/tasks/', methods=['GET'])
 @bp.route('/tasks', methods=['GET'])
 @require_taskman
