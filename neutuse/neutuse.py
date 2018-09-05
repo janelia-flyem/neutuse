@@ -1,4 +1,5 @@
 import sys
+import os
 import json
 import argparse
 import threading
@@ -122,6 +123,7 @@ def main():
             parser.add_argument('-l', '--log', default='')
             args=parser.parse_args(sys.argv[3:])
             if args.config != '':
+                directory = os.path.split(args.config)[0]
                 with open(args.config) as f:
                     config = yaml.load(f)
                     print(config)
@@ -132,7 +134,10 @@ def main():
                     processes = config.get('process', [])
                     threads = []
                     for p in processes:
-                        p_config = yaml.load(open(p['config']))
+                        if os.path.isabs(p['config']):
+                            p_config = yaml.load(open(p['config']))
+                        else:
+                            p_config = yaml.load(open(os.path.join(directory, p['config'])))
                         name = p['name']
                         if 'log' not in p_config:
                             p_config['log'] = log
