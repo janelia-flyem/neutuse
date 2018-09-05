@@ -55,7 +55,7 @@ def run_process(name, config):
         name(str): The name of process to run.
         config(dict): Configs passed to process
     '''
-    engine = Engine(name, config)
+    engine = Engine((name,), config)
     engine.run()
     
 
