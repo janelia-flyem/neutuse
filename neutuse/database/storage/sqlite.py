@@ -1,5 +1,6 @@
 import json
 import sqlite3 as sql
+import threading
 
 from .storagebase import StorageBase
 from .operation import *
@@ -14,10 +15,11 @@ class Sqlite(StorageBase):
         super(Sqlite, self).__init__()
         self.name = name
         self.model = model
+        self.lock = threading.Lock()
         conn = sql.connect(self.name)
         conn.execute('''
                         CREATE TABLE IF NOT EXISTS task (
-                        id int,
+                        id int PRIMARY KEY,
                         type text,
                         name text,
                         description text,
@@ -35,81 +37,84 @@ class Sqlite(StorageBase):
         conn.close()
 
     def insert(self, task):
-        try:
-            conn = sql.connect(self.name)
-            cur = conn.cursor()
-            cur.execute('''INSERT INTO task VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-                    (task.id, task.type, task.name, task.description,
-                    json.dumps(task.config), task.status,task.priority,
-                    task.life_span, task.max_tries, task.submitted, 
-                    task.last_updated, json.dumps(task.comments), task.user))
-            conn.commit()
-            conn.close()
-        except Exception as e:
-            print(e)
-            return False
-        return True
+        with self.lock:
+            try:
+                conn = sql.connect(self.name)
+                cur = conn.cursor()
+                cur.execute('''INSERT INTO task VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                        (task.id, task.type, task.name, task.description,
+                        json.dumps(task.config), task.status,task.priority,
+                        task.life_span, task.max_tries, task.submitted, 
+                        task.last_updated, json.dumps(task.comments), task.user))
+                conn.commit()
+                conn.close()
+            except Exception as e:
+                print(e)
+                return False
+            return True
 
     def update(self, id_, properties):
-        try:
-            if 'id' in properties:
+        with self.lock:
+            try:
+                if 'id' in properties:
+                    return False
+                conn = sql.connect(self.name)
+                cur = conn.cursor()
+                cmd = 'UPDATE task SET '
+                keys = []
+                values = []
+                for k in properties:
+                    keys.append(k)
+                    values.append(properties[k])
+                for k in keys:
+                    cmd += k + '=?,'
+                cmd = cmd[:-1]
+                cmd += ' WHERE id=?'
+                values.append(id_)
+                cur.execute(cmd, values)
+                conn.commit()
+                conn.close()
+            except Exception as e:
+                print(e)
                 return False
-            conn = sql.connect(self.name)
-            cur = conn.cursor()
-            cmd = 'UPDATE task SET '
-            keys = []
-            values = []
-            for k in properties:
-                keys.append(k)
-                values.append(properties[k])
-            for k in keys:
-                cmd += k + '=?,'
-            cmd = cmd[:-1]
-            cmd += ' WHERE id=?'
-            values.append(id_)
-            cur.execute(cmd, values)
-            conn.commit()
-            conn.close()
-        except Exception as e:
-            print(e)
-            return False
-        return True
+            return True
 
     def query(self,filters,odered_by='',desc=False):
-        try:
-            conn = sql.connect(self.name)
-            cur = conn.cursor()
-            if not filters:
-                cmd = 'SELECT * FROM task'
-            else:
-                cmd = 'SELECT * FROM task WHERE '
-                cmd += self._filters2sql(filters)
-            if odered_by != '':
-                cmd +=' ORDER BY ' + odered_by
-                if desc:
-                    cmd +=' DESC'
-            print(cmd)
-            cur.execute(cmd)
-            rv = []
-            for i in cur.fetchall():
-                rv.append(self._to_model(i))
-            conn.close()
-            return rv
-        except Exception as e:
-            print(e)
-            return []
+        with self.lock:
+            try:
+                conn = sql.connect(self.name)
+                cur = conn.cursor()
+                if not filters:
+                    cmd = 'SELECT * FROM task'
+                else:
+                    cmd = 'SELECT * FROM task WHERE '
+                    cmd += self._filters2sql(filters)
+                if odered_by != '':
+                    cmd +=' ORDER BY ' + odered_by
+                    if desc:
+                        cmd +=' DESC'
+                cur.execute(cmd)
+                rv = []
+                for i in cur.fetchall():
+                    rv.append(self._to_model(i))
+                conn.close()
+                return rv
+            except Exception as e:
+                print(e)
+                return []
 
     def next_available_id(self):
-        conn = sql.connect(self.name)
-        cur = conn.cursor()
-        cur.execute('SELECT MAX(id) FROM task')
-        rv = cur.fetchone()
-        if rv[0] is not None:
-            max_id = rv[0]
-        else:
-            max_id = 0
-        conn.close()
-        return max_id + 1
+        with self.lock:
+            conn = sql.connect(self.name)
+            cur = conn.cursor()
+            cur.execute('SELECT MAX(id) FROM task')
+            rv = cur.fetchone()
+            if rv[0] is not None:
+                max_id = rv[0]
+            else:
+                max_id = 0
+            conn.close()
+            return max_id + 1
     
     def _to_model(self, obj):
         dct = {'id':obj[0], 'type':obj[1], 'name':obj[2],

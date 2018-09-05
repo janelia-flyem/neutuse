@@ -9,6 +9,8 @@ import traceback
 import requests as rq 
 from requests.exceptions import ConnectionError
 
+from .neutuseurl import neutuse_url
+
 
 class TaskProcessor():
     
@@ -64,14 +66,15 @@ class TaskProcessor():
     
     def _register(self):
         service = {'type':self.type,'name':self.name}
-        rv = rq.post(self.addr + '/api/v1/services', headers={'Content-Type' : 'application/json'}, data=json.dumps(service))
+        url = neutuse_url.get_service_registration_url(self.addr)
+        rv = rq.post(url, headers={'Content-Type' : 'application/json'}, data=json.dumps(service))
         self.id = rv.json()['id']
         self.logger.info('Register service {}, status: {}'.format(json.dumps(service),str(rv.status_code == 200)))
         if rv.status_code != 200:
             self.logger.info(rv.text)
     
     def _pulse(self):
-        rv = rq.post(self.addr + '/api/v1/services/{}/pulse'.format(self.id))
+        rv = rq.post(neutuse_url.get_service_pulse_url(self.addr,self.id))
         self.logger.info('Pulse, status: {}'.format(str(rv.status_code  == 200)))
         if rv.status_code != 200:
             self.logger.info(rv.text)
@@ -80,12 +83,13 @@ class TaskProcessor():
         timer.start()
         
     def log(self, task, comment):
-        url = self.addr + '/api/v1/tasks/{}/comments'.format(task['id'])
+        url = neutuse_url.get_task_comment_url(self.addr,task['id'])
         rq.post(url, headers={'Content-Type' : 'application/json'}, data=json.dumps(comment))
     
     def _send_processing(self, task):
-        url = self.addr + '/api/v1/tasks/{}/status/processing'.format(task['id'])
+        url = neutuse_url.get_task_ack_url(self.addr,task['id'])
         rv = rq.post(url)
+        self.log(task,'service_id: {}'.format(self.id))
         self.logger.info('Send processing message for task {}, status: {}'.format(task['id'],str(rv.status_code ==200)))
         if rv.status_code !=200 :
             self.logger.info(rv.text)
@@ -93,7 +97,7 @@ class TaskProcessor():
     def fail(self, task):
         with self.lock:
             self.cur_num_workers -= 1
-        url = self.addr + '/api/v1/tasks/{}/status/failed'.format(task['id'])
+        url = neutuse_url.get_task_fail_url(self.addr,task['id'])
         rv = rq.post(url)
         self.logger.info('Send failed message for task {}, status: {}'.format(task['id'],str(rv.status_code ==200)))
         if rv.status_code !=200 :
@@ -102,7 +106,7 @@ class TaskProcessor():
     def success(self, task):
         with self.lock:
             self.cur_num_workers -= 1
-        url = self.addr + '/api/v1/tasks/{}/status/done'.format(task['id'])
+        url = neutuse_url.get_task_success_url(self.addr,task['id'])
         rv = rq.post(url)
         self.logger.info('Send success message for task {}, status: {}'.format(task['id'],str(rv.status_code ==200)))
         if rv.status_code !=200 :
@@ -123,7 +127,7 @@ class TaskProcessor():
              
     def _fetch_tasks(self):
         cnt_to_fetch  = self.num_workers - self.cur_num_workers
-        query_url = self.addr + '/api/v1/tasks/top/{}/{}/{}'.format(self.type, self.name, cnt_to_fetch)
+        query_url = neutuse_url.get_task_topk_url(self.addr, self.type, self.name, cnt_to_fetch)
         rv = rq.get(query_url)
         self.logger.info('Fetch {} tasks from database, status: {}'.format(cnt_to_fetch, rv.status_code == 200))
         if rv.status_code == 200:
@@ -144,7 +148,7 @@ class TaskProcessor():
                             else:
                                 self.logger.info('Verify schema for task {} failed'.format(task['id']))
                                 self.log(task,'invalid schema')
-                                url = self.addr + '/api/v1/tasks/{}/status/failed'.format(task['id'])
+                                url = neutuse_url.get_task_fail_url(self.addr, task['id'])
                                 rq.post(url)
                         for task in tasks:
                             self._send_processing(task)
