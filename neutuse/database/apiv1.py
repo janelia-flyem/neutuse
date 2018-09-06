@@ -70,7 +70,7 @@ class ServiceMan():
             try:
                 sender.send()
             except:
-                current_app.config['logger'].info('Failed to send email')
+                pass
         
         
 def require_taskman(func):
