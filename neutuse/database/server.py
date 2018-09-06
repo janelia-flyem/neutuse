@@ -17,7 +17,7 @@ class Server():
     '''
     
     def __init__(self, addr='127.0.0.1:5000', backend='sqlite:db.db',
-    enable_retry=False, debug=False, log_file='', email_config=None):
+    enable_retry=False, debug=False, log_file='', email_config=None, slack_config =None):
         pos = addr.rfind(':')
         self.host, self.port = addr[:pos], addr[pos+1:]
         self.port = int(self.port)
@@ -27,6 +27,7 @@ class Server():
         self.log_file = log_file
         self.enable_retry = enable_retry
         self.email_config = email_config
+        self.slack_config = slack_config
         self._init_logger()
         self._init_app()
 
@@ -55,6 +56,8 @@ class Server():
         self.app = Flask(__name__)
         if self.email_config:
             self.app.config['email'] = self.email_config
+        if self.slack_config:
+            self.app.config['slack'] = self.slack_config
         self.app.config['logger'] = self.logger
         self.app.config['addr'] = self.addr
         self.app.config['model'] = Task

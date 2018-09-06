@@ -3,4 +3,7 @@ address:
     port: 5000
 backend: sqlite:test.db
 retry: 1
+slack: 
+    token_file: /home/deli/slack_token.txt
+    channel: general
 log: /tmp/neutuse.log
