@@ -16,11 +16,12 @@ from .utils import mail
 
 bp = Blueprint('tasks', __name__)
 
-
+    
 class ServiceMan():
 
-    def __init__(self):
+    def __init__(self, email=None):
         self.service_list = []
+        self.email = email
         self.service_next_id = int(time.time())
         self.service_lock = threading.Lock()
         self.service_routine()
@@ -55,8 +56,8 @@ class ServiceMan():
         return None
         
     def send_email(self, msg):
-        email = current_app.config.get('email', '')
-        if 'email' != '':
+        if self.email:
+            email = self.email
             host = email['host']
             user = email['user']
             passwd = email['passwd']
@@ -101,7 +102,7 @@ def require_serman(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         if 'service_man' not in current_app.config:
-            current_app.config['service_man'] = ServiceMan()
+            current_app.config['service_man'] = ServiceMan(current_app.config.get('email',None))
         g.service_man = current_app.config['service_man']
         return func(*args, **kwargs)
     return wrapper
