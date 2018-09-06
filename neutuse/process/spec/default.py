@@ -17,7 +17,7 @@ class Default(TaskProcessor):
         success_code = config['success_code'] if 'success_code' in config else 0
         
         if rv == success_code:
-            self.success()
+            self.success(task)
         else:
-            self.fail()
+            self.fail(task)
     

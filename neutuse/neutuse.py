@@ -75,6 +75,10 @@ def post_task(addr, data):
         addr += '/'
     addr += 'api/v1/tasks'
     HEADERS={'Content-Type':'application/json'}
+    if not 'type' in data:
+        data['type'] = 'default'
+    if not 'name' in data:
+        data['name'] = 'default'
     rv = rq.post(addr, data=json.dumps(data), headers=HEADERS)
     print( rv.status_code )
     if rv.status_code !=200:
