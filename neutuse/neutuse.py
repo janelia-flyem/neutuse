@@ -36,7 +36,7 @@ __doc__ = '''Usage:
 '''
 
 
-def run_database(addr, backend, enable_retry= False, debug=False, log_file=''):
+def run_database(addr, backend, enable_retry= False, debug=False, log_file='', email_config=None):
     '''
     Args:
         addr(str): Which address the database will be running. Example: 127.0.0.1:5000
@@ -44,8 +44,9 @@ def run_database(addr, backend, enable_retry= False, debug=False, log_file=''):
         enable_retry(bool): If retry is enabled, expired tasks will be fetched by processes
         debug(bool): Enable debug mode or not
         log_file(str): Writing logs to which file.
+        email_config(dict): Email config used to send and receive important information
     '''    
-    database = Server(addr, backend, enable_retry, debug, log_file)
+    database = Server(addr, backend, enable_retry, debug, log_file, email_config)
     database.run()
 
 
@@ -55,7 +56,8 @@ def run_process(name, config):
         name(str): The name of process to run.
         config(dict): Configs passed to process
     '''
-    engine = Engine((name,), config)
+    services = [(name,config)]
+    engine = Engine(services)
     engine.run()
     
 
@@ -111,7 +113,8 @@ def main():
                     log = config.get('log','')
                     retry = config.get('retry',False)
                     debug  = config.get('debug', False)
-                    run_database(addr, backend, retry, debug, log)
+                    email = config.get('email',None)
+                    run_database(addr, backend, retry, debug, log, email)
             else:
                 run_database(args.addr, args.backend, args.retry, args.debug, args.log)
             
