@@ -9,7 +9,10 @@ import threading
 import time
 
 from flask import Blueprint, request, jsonify, abort, current_app, g
+
 from .task import Task
+from .utils import mail
+
 
 bp = Blueprint('tasks', __name__)
 
@@ -27,6 +30,7 @@ class ServiceMan():
             if time.time()-service['last_active'] > 3*60:
                 with self.service_lock:
                     self.service_list.remove(service)
+                    self.send_email('Service ({}) is down'.format(json.dumps(service)))
         timer = threading.Timer(60, self.service_routine)
         timer.start()
     
@@ -35,6 +39,7 @@ class ServiceMan():
             service = {'id':self.service_next_id, 'type':type_, 'name':name, 'last_active':time.time()}
             self.service_next_id += 1
             self.service_list.append(service)
+            self.send_email('A new service ({}) has been added to neutuse.'.format(json.dumps(service)))
             return service
     
     def get_service_list(self):
@@ -49,7 +54,24 @@ class ServiceMan():
                     return service
         return None
         
-
+    def send_email(self, msg):
+        email = current_app.config.get('email', '')
+        if 'email' != '':
+            host = email['host']
+            user = email['user']
+            passwd = email['passwd']
+            port = email['port'] if 'port' in email else 25
+            sender = mail.MailSender(host,user,passwd,port)
+            for to in email['to']:
+                sender.add_receiver(to)
+            sender.set_subject('neutuse service status changed')
+            sender.add_text(msg)
+            try:
+                sender.send()
+            except:
+                current_app.config['logger'].info('Failed to send email')
+        
+        
 def require_taskman(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
