@@ -6,21 +6,21 @@ class Engine():
     This class is the engine of running different processes.
     '''
     
-    def __init__(self, names, config):
+    def __init__(self, services):
         '''
         Args:
-            name(str): The name of process to run
-            config(dict): Configs passed to process
+            services(array): Array of services want to run,example (('name1',config1),('name2',config2),(...))
         '''
-        self.names = names
-        self.config = config
+        self.services= services
         
     def run(self):
         '''
         Start running the process
         '''
-        for name in self.names:
+        #print(TaskProcessor.__subclasses__())
+        for service in self.services:
+            name, config = service
             for subclass in TaskProcessor.__subclasses__():
                 name2 = subclass.__type_name__[1]
                 if name == name2:
-                    subclass(self.config).run()
+                    subclass(config).run()

@@ -74,13 +74,17 @@ class TaskProcessor():
             self.logger.info(rv.text)
     
     def _pulse(self):
-        rv = rq.post(neutuse_url.get_service_pulse_url(self.addr,self.id))
-        self.logger.info('Pulse, status: {}'.format(str(rv.status_code  == 200)))
-        if rv.status_code != 200:
-            self.logger.info(rv.text)
-            self._register()
-        timer = threading.Timer(60, self._pulse)
-        timer.start()
+        try:
+            rv = rq.post(neutuse_url.get_service_pulse_url(self.addr,self.id))
+            self.logger.info('Pulse, status: {}'.format(str(rv.status_code  == 200)))
+            if rv.status_code != 200:
+                self.logger.info(rv.text)
+                self._register()
+        except Exception as e:
+            self.logger.info(e)
+        finally:
+            timer = threading.Timer(60, self._pulse)
+            timer.start()
         
     def log(self, task, comment):
         url = neutuse_url.get_task_comment_url(self.addr,task['id'])
