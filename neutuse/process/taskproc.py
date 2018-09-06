@@ -82,6 +82,7 @@ class TaskProcessor():
                 self._register()
         except Exception as e:
             self.logger.info(e)
+        finally:
             timer = threading.Timer(60, self._pulse)
             timer.start()
         
