@@ -11,7 +11,7 @@ import time
 from flask import Blueprint, request, jsonify, abort, current_app, g
 
 from .task import Task
-from .utils import mail
+from .utils import mail, slack
 
 
 bp = Blueprint('tasks', __name__)
@@ -19,9 +19,10 @@ bp = Blueprint('tasks', __name__)
     
 class ServiceMan():
 
-    def __init__(self, email=None):
+    def __init__(self, email=None, slack=None):
         self.service_list = []
         self.email = email
+        self.slack = slack
         self.service_next_id = int(time.time())
         self.service_lock = threading.Lock()
         self.service_routine()
@@ -31,7 +32,7 @@ class ServiceMan():
             if time.time()-service['last_active'] > 3*60:
                 with self.service_lock:
                     self.service_list.remove(service)
-                    self.send_email('Service ({}) is down'.format(json.dumps(service)))
+                    self.notify('Service ({}) is down'.format(json.dumps(service)))
         timer = threading.Timer(60, self.service_routine)
         timer.start()
     
@@ -40,7 +41,7 @@ class ServiceMan():
             service = {'id':self.service_next_id, 'type':type_, 'name':name, 'last_active':time.time()}
             self.service_next_id += 1
             self.service_list.append(service)
-            self.send_email('A new service ({}) has been added to neutuse.'.format(json.dumps(service)))
+            self.notify('A new service ({}) has been added to neutuse.'.format(json.dumps(service)))
             return service
     
     def get_service_list(self):
@@ -54,7 +55,12 @@ class ServiceMan():
                     service['last_active'] = time.time()
                     return service
         return None
-        
+      
+      
+    def notify(self, msg):
+        self.send_email(msg)
+        self.send_slack(msg)
+          
     def send_email(self, msg):
         if self.email:
             email = self.email
@@ -71,8 +77,15 @@ class ServiceMan():
                 sender.send()
             except:
                 pass
-        
-        
+
+    def send_slack(self, msg):
+        if self.slack:
+            print(self.slack)
+            token_file = self.slack['token_file']
+            channel = self.slack['channel']
+            slack.Slack('neutuse',token_file).send(channel, msg)
+
+      
 def require_taskman(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -102,7 +115,9 @@ def require_serman(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         if 'service_man' not in current_app.config:
-            current_app.config['service_man'] = ServiceMan(current_app.config.get('email',None))
+            email = current_app.config.get('email',None)
+            slack = current_app.config.get('slack',None)
+            current_app.config['service_man'] = ServiceMan(email, slack)
         g.service_man = current_app.config['service_man']
         return func(*args, **kwargs)
     return wrapper

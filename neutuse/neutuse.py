@@ -36,7 +36,7 @@ __doc__ = '''Usage:
 '''
 
 
-def run_database(addr, backend, enable_retry= False, debug=False, log_file='', email_config=None):
+def run_database(addr, backend, enable_retry= False, debug=False, log_file='', email_config=None, slack_config=None):
     '''
     Args:
         addr(str): Which address the database will be running. Example: 127.0.0.1:5000
@@ -46,7 +46,7 @@ def run_database(addr, backend, enable_retry= False, debug=False, log_file='', e
         log_file(str): Writing logs to which file.
         email_config(dict): Email config used to send and receive important information
     '''    
-    database = Server(addr, backend, enable_retry, debug, log_file, email_config)
+    database = Server(addr, backend, enable_retry, debug, log_file, email_config, slack_config)
     database.run()
 
 
@@ -118,7 +118,8 @@ def main():
                     retry = config.get('retry',False)
                     debug  = config.get('debug', False)
                     email = config.get('email',None)
-                    run_database(addr, backend, retry, debug, log, email)
+                    slack = config.get('slack',None)
+                    run_database(addr, backend, retry, debug, log, email, slack)
             else:
                 run_database(args.addr, args.backend, args.retry, args.debug, args.log)
             
