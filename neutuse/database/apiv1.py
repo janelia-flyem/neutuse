@@ -12,7 +12,6 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify, abort, current_app, g
 
 from .task import Task
-from .utils import mail, slack
 
 from .manager import Manager
 

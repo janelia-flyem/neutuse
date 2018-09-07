@@ -1,30 +1,43 @@
 import threading
 import time
 from datetime import datetime, timedelta
-
+import logging
+import logging.handlers
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from neutuse.database.models import Base, Task, Service
+from neutuse.database.utils import mail, slack
 
 
 class Logger():
     
-    def __init__(self, **kwargs):
-        pass
+    def __init__(self, logfile=None, email=None, slack=None):
+        self.email = email
+        self.slack = slack
+        self.logger = logging.getLogger('neutuse')            
+        fmt = "%(asctime)-15s %(levelname)s %(filename)s.%(lineno)d >>>> %(message)s"
+        sh = logging.StreamHandler()
+        sh.setFormatter(logging.Formatter(fmt))
+        self.logger.addHandler(sh)
+        if logfile:
+            fh = logging.handlers.RotatingFileHandler(logfile,maxBytes = 1024*1024*100, backupCount = 3)    
+            fh.setFormatter(logging.Formatter(fmt))
+            self.logger.addHandler(fh)
 
     def info(self, msg):
-        pass
+        self.logger.info(msg)
         
     def warning(self, msg):
-        pass
+        self.logger.warning(msg)
+        self._email(msg)
+        self._slack(msg)
         
     def error(self, msg):
-        pass
-        
-    def critical(self, msg):
-        pass
+        self.logger.error(msg)
+        self._email(msg)
+        self._slack(msg)
     
     def _email(self, msg):
         if self.email:
@@ -36,7 +49,7 @@ class Logger():
             sender = mail.MailSender(host,user,passwd,port)
             for to in email['to']:
                 sender.add_receiver(to)
-            sender.set_subject('neutuse service status changed')
+            sender.set_subject('neutuse message')
             sender.add_text(msg)
             try:
                 sender.send()
@@ -45,10 +58,10 @@ class Logger():
 
     def _slack(self, msg):
         if self.slack:
-            print(self.slack)
             token_file = self.slack['token_file']
             channel = self.slack['channel']
             slack.Slack('neutuse',token_file).send(channel, msg)
+
 
 class Manager():
     
@@ -59,9 +72,9 @@ class Manager():
         logfile = kwargs.get('logfile', None)
         email = kwargs.get('email', None)
         slack = kwargs.get('slack', None)
-        #self._init_logger(logfile, email, slack)
+        self._init_logger(logfile, email, slack)
         
-        self._init_managers()
+        self._init_sub_managers()
 
     def _init_logger(self, logfile, email, slack):
         self._logger = Logger(logfile, email, slack)
@@ -71,9 +84,9 @@ class Manager():
         Base.metadata.create_all(self.engine)
         self.Session = sessionmaker(bind=self.engine)
 
-    def _init_managers(self):
-        self._task_manager = TaskManager(self.Session)
-        self._service_manager = ServiceManager(self.Session)
+    def _init_sub_managers(self):
+        self._task_manager = TaskManager(self)
+        self._service_manager = ServiceManager(self)
         
     @property
     def task(self):
@@ -90,9 +103,8 @@ class Manager():
 
 class TaskManager():
     
-    def __init__(self, Session):
-        self.Session = Session
-        self.session = Session()
+    def __init__(self, man):
+        self.Session = man.Session
         
     def _del__(self):
         self.session.close()
@@ -128,8 +140,9 @@ class TaskManager():
 
 class ServiceManager():
     
-    def __init__(self, Session):
-        self.Session = Session
+    def __init__(self, man):
+        self.Session = man.Session
+        self.logger = man.logger
         self._routine()
         
     def all(self):
@@ -144,6 +157,7 @@ class ServiceManager():
         service = Service(**service)
         session.add(service)
         session.commit()
+        self.logger.warning('{} has been added to neutuse.'.format(service))
         rv = service.id
         session.close()
         return rv
@@ -171,7 +185,10 @@ class ServiceManager():
     
     def _routine(self):
         session = self.Session()
-        cnt = session.query(Service).filter(Service.last_active < datetime.now() - timedelta(minutes=3) ).delete()
+        expired = session.query(Service).filter(Service.last_active < datetime.now() - timedelta(minutes=1) )
+        for e in expired:
+            self.logger.warning('{} is down'.format(e))
+            session.delete(e)
         session.commit()
         session.close()
         timer = threading.Timer(60, self._routine)
