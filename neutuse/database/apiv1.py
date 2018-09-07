@@ -7,84 +7,19 @@ from functools import wraps
 import json
 import threading
 import time
+from datetime import datetime
 
 from flask import Blueprint, request, jsonify, abort, current_app, g
 
 from .task import Task
 from .utils import mail, slack
 
+from .manager import Manager
+
 
 bp = Blueprint('tasks', __name__)
 
     
-class ServiceMan():
-
-    def __init__(self, email=None, slack=None):
-        self.service_list = []
-        self.email = email
-        self.slack = slack
-        self.service_next_id = int(time.time())
-        self.service_lock = threading.Lock()
-        self.service_routine()
-    
-    def service_routine(self):
-        for service in self.service_list:
-            if time.time()-service['last_active'] > 3*60:
-                with self.service_lock:
-                    self.service_list.remove(service)
-                    self.notify('Service ({}) is down'.format(json.dumps(service)))
-        timer = threading.Timer(60, self.service_routine)
-        timer.start()
-    
-    def add_service(self,type_,name):
-        with self.service_lock:
-            service = {'id':self.service_next_id, 'type':type_, 'name':name, 'last_active':time.time()}
-            self.service_next_id += 1
-            self.service_list.append(service)
-            self.notify('A new service ({}) has been added to neutuse.'.format(json.dumps(service)))
-            return service
-    
-    def get_service_list(self):
-        service_list = self.service_list
-        return service_list
-        
-    def pulse(self, id_):
-        for service in self.service_list:
-            if id_ == service['id']:
-                with self.service_lock:
-                    service['last_active'] = time.time()
-                    return service
-        return None
-      
-      
-    def notify(self, msg):
-        self.send_email(msg)
-        self.send_slack(msg)
-          
-    def send_email(self, msg):
-        if self.email:
-            email = self.email
-            host = email['host']
-            user = email['user']
-            passwd = email['passwd']
-            port = email['port'] if 'port' in email else 25
-            sender = mail.MailSender(host,user,passwd,port)
-            for to in email['to']:
-                sender.add_receiver(to)
-            sender.set_subject('neutuse service status changed')
-            sender.add_text(msg)
-            try:
-                sender.send()
-            except:
-                pass
-
-    def send_slack(self, msg):
-        if self.slack:
-            print(self.slack)
-            token_file = self.slack['token_file']
-            channel = self.slack['channel']
-            slack.Slack('neutuse',token_file).send(channel, msg)
-
       
 def require_taskman(func):
     @wraps(func)
@@ -117,7 +52,7 @@ def require_serman(func):
         if 'service_man' not in current_app.config:
             email = current_app.config.get('email',None)
             slack = current_app.config.get('slack',None)
-            current_app.config['service_man'] = ServiceMan(email, slack)
+            current_app.config['service_man'] = Manager(email=email, slack=slack).service
         g.service_man = current_app.config['service_man']
         return func(*args, **kwargs)
     return wrapper
@@ -128,7 +63,7 @@ def require_serman(func):
 @require_serman
 @require_logger
 def service_list():
-    service_list = g.service_man.get_service_list()
+    service_list = g.service_man.all()
     if len(service_list) > 0:
         return jsonify(service_list)
     rv = 'FAILED: No active services found'
@@ -143,8 +78,8 @@ def service_list():
 def create_service():
     config = request.json
     if 'type' in config and 'name' in config:
-        service = g.service_man.add_service(config['type'],config['name'])
-        return jsonify(service)
+        id_ = g.service_man.add({'type':config['type'], 'name':config['name']})
+        return jsonify(g.service_man.get(id_))
     rv = 'FAILED: Missing task type or name'
     g.logger.info(rv)
     return rv, 400
@@ -155,9 +90,8 @@ def create_service():
 @require_serman
 @require_logger
 def pulse(id_):
-    service = g.service_man.pulse(id_)
-    if service is not None:
-        return jsonify(service)
+    if g.service_man.update(id_, {'last_active': datetime.now()}):
+        return jsonify(g.service_man.get(id_))
     rv = 'FAILED: No services have this id'
     g.logger.info(rv)
     return rv, 400

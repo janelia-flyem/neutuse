@@ -17,8 +17,7 @@ function update(){
                         content+="<td style='word-wrap:break-word;'>"+value["id"]+"</td>";
                         content+="<td style='word-wrap:break-word;'>"+value["type"]+"</td>";
                         content+="<td style='word-wrap:break-word;'>"+value["name"]+"</td>";
-                        date.setTime(value["last_active"]*1000);
-                        content+="<td style='word-wrap:break-word;'>"+date.toLocaleString()+"</td>";                   
+                        content+="<td style='word-wrap:break-word;'>"+value["last_active"]+"</td>";                   
                     });
                     content+="</table>";
                     $('tr').remove('.item');
