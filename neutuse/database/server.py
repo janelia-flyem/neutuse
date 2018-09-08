@@ -9,6 +9,9 @@ from .storage import Sqlite
 from .task import Task
 from .taskmanager import TaskManager
 
+from .manager import Manager
+
+
 class Server():
 
     '''
@@ -24,41 +27,16 @@ class Server():
         self.addr = addr if addr.startswith('http') else 'http://' + addr
         self.backend = backend
         self.debug = debug
-        self.log_file = log_file
         self.enable_retry = enable_retry
-        self.email_config = email_config
-        self.slack_config = slack_config
-        self._init_logger()
+        self._init_manager(log_file, email_config, slack_config)
         self._init_app()
 
     
-    def _init_logger(self):
-        self.logger = logging.getLogger('neutuse')
-        werk_logger = logging.getLogger('werkzeug')
-        werk_logger.disabled = True
-        if self.debug:
-            self.logger.setLevel(logging.DEBUG)
-        else:
-            self.logger.setLevel(logging.INFO)
-            
-        fmt = "%(asctime)-15s %(levelname)s %(filename)s.%(lineno)d >>>> %(message)s"
-        sh = logging.StreamHandler()
-        sh.setFormatter(logging.Formatter(fmt))
-        self.logger.addHandler(sh)
-        
-        if self.log_file !='' :
-            fh = logging.handlers.RotatingFileHandler(self.log_file,maxBytes = 1024*1024*100, backupCount = 3)    
-            fh.setFormatter(logging.Formatter(fmt))
-            werk_logger.addHandler(fh)
-            self.logger.addHandler(fh)
+    def _init_manager(self, logfile, email, slack):
+        Manager.set(logfile=logfile, email=email, slack=slack)
 
     def _init_app(self):
         self.app = Flask(__name__)
-        if self.email_config:
-            self.app.config['email'] = self.email_config
-        if self.slack_config:
-            self.app.config['slack'] = self.slack_config
-        self.app.config['logger'] = self.logger
         self.app.config['addr'] = self.addr
         self.app.config['model'] = Task
         dbtype, path = self.backend.split(':')
@@ -73,8 +51,8 @@ class Server():
         self.app.register_blueprint(web.bp, url_prefix='/')
         self.app.register_blueprint(apiv1.bp, url_prefix='/api/v1')
         
-        self.logger.info('start database service at {}'.format(self.addr))
-        self.logger.info('using {} as backend'.format(self.backend))
+        Manager.get().logger.info('start database service at {}'.format(self.addr))
+        Manager.get().logger.info('using {} as backend'.format(self.backend))
         
     def run(self):
         self.app.run(host=self.host, port=self.port,debug=True)

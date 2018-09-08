@@ -31,16 +31,15 @@ def require_taskman(func):
 def require_logger(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        g.logger = current_app.config['logger']
         params = request.args
         info = request.method + ' ' + request.base_url 
         if 'u' in params:
             info += ' user:{}'.format(params['u'])
         if 'app' in params:
             info += ' app:{}'.format(params['app'])
-        g.logger.info(info)
+        Manager.get().logger.info(info)
         if request.method == 'POST':
-            g.logger.info('POSTED DATA: {}'.format(request.json))
+            Manager.get().logger.info('POSTED DATA: {}'.format(request.json))
         return func(*args, **kwargs)
     return wrapper
     
@@ -66,7 +65,7 @@ def service_list():
     if len(service_list) > 0:
         return jsonify(service_list)
     rv = 'FAILED: No active services found'
-    g.logger.info(rv)
+    Manager.get().logger.info(rv)
     return rv, 400
 
 
@@ -80,7 +79,7 @@ def create_service():
         id_ = g.service_man.add({'type':config['type'], 'name':config['name']})
         return jsonify(g.service_man.get(id_))
     rv = 'FAILED: Missing task type or name'
-    g.logger.info(rv)
+    Manager.get().logger.info(rv)
     return rv, 400
     
 
@@ -92,7 +91,7 @@ def pulse(id_):
     if g.service_man.update(id_, {'last_active': datetime.now()}):
         return jsonify(g.service_man.get(id_))
     rv = 'FAILED: No services have this id'
-    g.logger.info(rv)
+    Manager.get().logger.info(rv)
     return rv, 400
 
 
@@ -105,12 +104,12 @@ def get_tasks_pagination(odered_by, page_size, page_num):
     filters = request.args
     if odered_by not in Task.__mapping__.keys():
             rv  = 'FAILED: Invalid odered_by key word'
-            g.logger.info(rv)
+            Manager.get().logger.info(rv)
             return rv, 400 
     for key in filters.keys():
         if key not in Task.__mapping__.keys():
             rv  = 'FAILED: Invalid query filters'
-            g.logger.info(rv)
+            Manager.get().logger.info(rv)
             return rv, 400
     rv = g.man.query(filters,odered_by=odered_by,desc=True)
     start = page_num*page_size
@@ -118,7 +117,7 @@ def get_tasks_pagination(odered_by, page_size, page_num):
     rv = rv[start:end]
     if len(rv) == 0:
         rv = 'FAILED: No tasks meet the conditions'
-        g.logger.info(rv)
+        Manager.get().logger.info(rv)
         return rv, 400
     return jsonify(rv)
     
@@ -133,12 +132,12 @@ def get_tasks():
     for key in filters.keys():
         if key not in Task.__mapping__.keys():
             rv  = 'FAILED: Invalid query filters'
-            g.logger.info(rv)
+            Manager.get().logger.info(rv)
             return rv, 400
     rv = g.man.query(filters)
     if len(rv) == 0:
         rv = 'FAILED: No tasks meet the conditions'
-        g.logger.info(rv)
+        Manager.get().logger.info(rv)
         return rv, 400
     return jsonify(rv)
 
@@ -154,7 +153,7 @@ def get_tasks_by_id(id_):
         return  jsonify(rv[0])
     else:
         rv  = 'FAILED: No tasks have this id'
-        g.logger.info(rv)
+        Manager.get().logger.info(rv)
         return rv, 400
 
 
@@ -170,11 +169,11 @@ def get_tasks_property_by_id(id_, property_):
             return jsonify(rv[0][property_])
         else:
             rv = 'FAILED: Task found, but it does not contain the specified property'
-            g.logger.info(rv)
+            Manager.get().logger.info(rv)
             return rv, 400
     else:
         rv  = 'FAILED: No tasks have this id'
-        g.logger.info(rv)
+        Manager.get().logger.info(rv)
         return rv, 400
 
 
@@ -188,7 +187,7 @@ def top(type_, name, cnt):
         return jsonify(rv)
     else:
         rv = 'FAILED: No more tasks'
-        g.logger.info(rv)
+        Manager.get().logger.info(rv)
         return rv, 400
 
 
@@ -203,13 +202,13 @@ def post_tasks():
         task = Task(**config)
     except Exception as e:
         rv = 'FAILED: Failed to create the task because of invalid properties: ' + str(e) 
-        g.logger.info(rv)
+        Manager.get().logger.info(rv)
         return rv, 400
     if g.man.insert(task):
         return jsonify(task)
     else:
         rv = 'FAILED: Task created, but failed to store into the database'
-        g.logger.info(rv)
+        Manager.get().logger.info(rv)
         return rv, 400
 
 
@@ -221,13 +220,13 @@ def post_tasks():
 def update_status(id_, status):
     if not status in ('processing', 'failed', 'done'):
         rv = 'FAILED: Illegal status'
-        g.logger.info(rv)
+        Manager.get().logger.info(rv)
         return rv, 400
     if g.man.update(id_, {'status' : status}):
         return jsonify(g.man.query({'id' : id_})[0])
     else:
         rv = 'FAILED: Failed to update the status'
-        g.logger.info(rv)
+        Manager.get().logger.info(rv)
         return rv, 400
         
 
@@ -241,7 +240,7 @@ def add_comment(id_):
     task = g.man.query({'id' : id_})
     if len(task) < 1:
         rv = 'FAILED: No tasks have this id'
-        g.logger.info(rv)
+        Manager.get().logger.info(rv)
         return rv, 400
     task = task[0]
     comments = task.comments
@@ -249,11 +248,11 @@ def add_comment(id_):
         comments.append(str(comment))
     except Exception as e:
         rv = 'FAILED: Invalid comments format: ' + str(e) 
-        g.logger.info(rv)
+        Manager.get().logger.info(rv)
         return rv, 400
     if g.man.update(id_, {'comments' : json.dumps(comments)}):
         return jsonify(g.man.query({'id' : id_})[0])
     else:
         rv = 'FAILED: Failed to add the comment'
-        g.logger.info(rv)
+        Manager.get().logger.info(rv)
         return rv, 400

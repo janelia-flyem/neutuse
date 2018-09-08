@@ -9,7 +9,9 @@ class Logger():
     def __init__(self, logfile=None, email=None, slack=None):
         self.email = email
         self.slack = slack
-        self.logger = logging.getLogger('neutuse')            
+        self.logger = logging.getLogger('neutuse')
+        self.logger.setLevel(logging.INFO)
+        logging.getLogger('werkzeug').disabled = True          
         fmt = "%(asctime)-15s %(levelname)s %(filename)s.%(lineno)d >>>> %(message)s"
         sh = logging.StreamHandler()
         sh.setFormatter(logging.Formatter(fmt))

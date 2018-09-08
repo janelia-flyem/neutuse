@@ -12,6 +12,18 @@ from neutuse.database.utils.logger import Logger
 
 class Manager():
     
+    instance = None
+    
+    @classmethod
+    def set(cls, **kwargs):
+        cls.instance = Manager(**kwargs)
+        
+    @classmethod
+    def get(cls):
+        if cls.instance is None:
+            raise AttributeError('Manager instance has not been created')
+        return cls.instance
+        
     def __init__(self, **kwargs):
         backend = kwargs.get('backend', 'sqlite:///test.db')
         self._init_backend(backend)
