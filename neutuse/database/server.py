@@ -55,5 +55,5 @@ class Server():
         Manager.get().logger.info('using {} as backend'.format(self.backend))
         
     def run(self):
-        self.app.run(host=self.host, port=self.port,debug=True)
+        self.app.run(host=self.host, port=self.port)
 

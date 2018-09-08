@@ -12,7 +12,7 @@ class Logger():
         self.logger = logging.getLogger('neutuse')
         self.logger.setLevel(logging.INFO)
         logging.getLogger('werkzeug').disabled = True          
-        fmt = "%(asctime)-15s %(levelname)s %(filename)s.%(lineno)d >>>> %(message)s"
+        fmt = "%(asctime)-15s %(levelname)s >>>> %(message)s"
         sh = logging.StreamHandler()
         sh.setFormatter(logging.Formatter(fmt))
         self.logger.addHandler(sh)

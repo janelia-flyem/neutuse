@@ -54,12 +54,24 @@ def require_serman(func):
         g.service_man = current_app.config['service_man']
         return func(*args, **kwargs)
     return wrapper
-    
+  
+
+def logging_and_check(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            rv = 'FAILED: Request failed because ' + str(e)
+            Manager.get().logger.info(rv)
+            return rv, 400
+    return wrapper
 
 @bp.route('/services/', methods=['GET'])
 @bp.route('/services', methods=['GET'])
 @require_serman
 @require_logger
+@logging_and_check
 def service_list():
     service_list = g.service_man.all()
     if len(service_list) > 0:
@@ -73,6 +85,7 @@ def service_list():
 @bp.route('/services', methods=['POST'])
 @require_serman
 @require_logger
+@logging_and_check
 def create_service():
     config = request.json
     if 'type' in config and 'name' in config:
@@ -87,6 +100,7 @@ def create_service():
 @bp.route('/services/<int:id_>/pulse', methods=['POST'])
 @require_serman
 @require_logger
+@logging_and_check
 def pulse(id_):
     if g.service_man.update(id_, {'last_active': datetime.now()}):
         return jsonify(g.service_man.get(id_))
@@ -96,29 +110,16 @@ def pulse(id_):
 
 
 #query
-@bp.route('/tasks/pagination/<string:odered_by>/<int:page_size>/<int:page_num>', methods=['GET'])
-@bp.route('/tasks/pagination/<string_odered_by>/<int:page_size><int:page_num>', methods=['GET'])
+@bp.route('/tasks/pagination/<string:order_by>/<int:page_size>/<int:page_index>', methods=['GET'])
+@bp.route('/tasks/pagination/<string_order_by>/<int:page_size><int:page_index>', methods=['GET'])
 @require_taskman
 @require_logger
-def get_tasks_pagination(odered_by, page_size, page_num):
+@logging_and_check
+def get_tasks_pagination(order_by, page_size, page_index):
     filters = request.args
-    if odered_by not in Task.__mapping__.keys():
-            rv  = 'FAILED: Invalid odered_by key word'
-            Manager.get().logger.info(rv)
-            return rv, 400 
-    for key in filters.keys():
-        if key not in Task.__mapping__.keys():
-            rv  = 'FAILED: Invalid query filters'
-            Manager.get().logger.info(rv)
-            return rv, 400
-    rv = g.man.query(filters,odered_by=odered_by,desc=True)
-    start = page_num*page_size
-    end = (page_num+1)*page_size
-    rv = rv[start:end]
+    rv = Manager.get().task.pagination(filters, order_by, page_size, page_index, True)
     if len(rv) == 0:
-        rv = 'FAILED: No tasks meet the conditions'
-        Manager.get().logger.info(rv)
-        return rv, 400
+        raise Exception('No tasks meet the conditions')
     return jsonify(rv)
     
 
@@ -127,18 +128,12 @@ def get_tasks_pagination(odered_by, page_size, page_num):
 @bp.route('/tasks', methods=['GET'])
 @require_taskman
 @require_logger
+@logging_and_check
 def get_tasks():
     filters = request.args
-    for key in filters.keys():
-        if key not in Task.__mapping__.keys():
-            rv  = 'FAILED: Invalid query filters'
-            Manager.get().logger.info(rv)
-            return rv, 400
-    rv = g.man.query(filters)
+    rv = Manager.get().task.query(filters)
     if len(rv) == 0:
-        rv = 'FAILED: No tasks meet the conditions'
-        Manager.get().logger.info(rv)
-        return rv, 400
+        raise Exception('No tasks meet the conditions')
     return jsonify(rv)
 
 
@@ -146,49 +141,38 @@ def get_tasks():
 @bp.route('/tasks/<int:id_>', methods=['GET'])
 @require_taskman
 @require_logger
+@logging_and_check
 def get_tasks_by_id(id_):
-    filters = {'id' : id_}
-    rv = g.man.query(filters)
-    if len(rv) > 0:
-        return  jsonify(rv[0])
-    else:
-        rv  = 'FAILED: No tasks have this id'
-        Manager.get().logger.info(rv)
-        return rv, 400
+    rv = Manager.get().task.get(id_)
+    if not rv:
+        raise Exception('No task has this ID')
+    return jsonify(rv)
 
 
 @bp.route('/tasks/<int:id_>/<string:property_>/', methods=['GET'])
 @bp.route('/tasks/<int:id_>/<string:property_>', methods=['GET'])
 @require_taskman
 @require_logger
+@logging_and_check
 def get_tasks_property_by_id(id_, property_):
-    filters = {'id' : id_}
-    rv = g.man.query(filters)
-    if len(rv) > 0:
-        if property_ in rv[0]:
-            return jsonify(rv[0][property_])
-        else:
-            rv = 'FAILED: Task found, but it does not contain the specified property'
-            Manager.get().logger.info(rv)
-            return rv, 400
-    else:
-        rv  = 'FAILED: No tasks have this id'
-        Manager.get().logger.info(rv)
-        return rv, 400
+    rv = Manager.get().task.get(id_)
+    if not rv:
+        raise Exception('No task has this ID')
+    if property_ not in rv:
+        raise Exception('Task object has not ' + property_ + ' property')
+    return jsonify(rv[property_])
 
 
 @bp.route('/tasks/top/<string:type_>/<string:name>/<int:cnt>/', methods=['GET'])
 @bp.route('/tasks/top/<string:type_>/<string:name>/<int:cnt>', methods=['GET'])
 @require_taskman
 @require_logger
+@logging_and_check
 def top(type_, name, cnt):
-    rv = g.man.top(cnt, type_, name)
-    if len(rv) > 0:
-        return jsonify(rv)
-    else:
-        rv = 'FAILED: No more tasks'
-        Manager.get().logger.info(rv)
-        return rv, 400
+    rv = Manager.get().task.top(type_, name, cnt)
+    if len(rv) == 0:
+        raise Exception('No more tasks')
+    return jsonify(rv)
 
 
 #create
@@ -196,20 +180,11 @@ def top(type_, name, cnt):
 @bp.route('/tasks', methods=['POST'])
 @require_taskman
 @require_logger
+@logging_and_check
 def post_tasks():
     config = request.json
-    try:
-        task = Task(**config)
-    except Exception as e:
-        rv = 'FAILED: Failed to create the task because of invalid properties: ' + str(e) 
-        Manager.get().logger.info(rv)
-        return rv, 400
-    if g.man.insert(task):
-        return jsonify(task)
-    else:
-        rv = 'FAILED: Task created, but failed to store into the database'
-        Manager.get().logger.info(rv)
-        return rv, 400
+    id_ = Manager.get().task.add(config)
+    return jsonify(Manager.get().task.get(id_))
 
 
 #update status :processing ,failed or done
@@ -217,17 +192,12 @@ def post_tasks():
 @bp.route('/tasks/<int:id_>/status/<string:status>', methods=['POST'])
 @require_taskman
 @require_logger
+@logging_and_check
 def update_status(id_, status):
     if not status in ('processing', 'failed', 'done'):
-        rv = 'FAILED: Illegal status'
-        Manager.get().logger.info(rv)
-        return rv, 400
-    if g.man.update(id_, {'status' : status}):
-        return jsonify(g.man.query({'id' : id_})[0])
-    else:
-        rv = 'FAILED: Failed to update the status'
-        Manager.get().logger.info(rv)
-        return rv, 400
+        raise Exception('Illegal status')
+    Manager.get().task.update(id_, {'status':status})
+    return jsonify(Manager.get().task.get(id_))
         
 
 #add comment
@@ -235,24 +205,11 @@ def update_status(id_, status):
 @bp.route('/tasks/<int:id_>/comments', methods=['POST'])
 @require_taskman
 @require_logger
+@logging_and_check
 def add_comment(id_):
     comment = request.json
-    task = g.man.query({'id' : id_})
-    if len(task) < 1:
-        rv = 'FAILED: No tasks have this id'
-        Manager.get().logger.info(rv)
-        return rv, 400
-    task = task[0]
-    comments = task.comments
-    try:
-        comments.append(str(comment))
-    except Exception as e:
-        rv = 'FAILED: Invalid comments format: ' + str(e) 
-        Manager.get().logger.info(rv)
-        return rv, 400
-    if g.man.update(id_, {'comments' : json.dumps(comments)}):
-        return jsonify(g.man.query({'id' : id_})[0])
-    else:
-        rv = 'FAILED: Failed to add the comment'
-        Manager.get().logger.info(rv)
-        return rv, 400
+    if 0 == Manager.get().task.add_comment(id_, json.dumps(comment)):
+        raise Exception('Failed to add comment')
+    return jsonify(Manager.get().task.get(id_))
+
+    #return jsonify(Manager.get().task.get(id_))

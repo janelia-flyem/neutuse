@@ -3,10 +3,10 @@ import time
 from datetime import datetime, timedelta
 
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker
 
-from neutuse.database.models import Base, Task, Service
+from neutuse.database.models import Base, Task, Service, filters_convertor
 from neutuse.database.utils.logger import Logger
 
 
@@ -64,38 +64,146 @@ class TaskManager():
     
     def __init__(self, man):
         self.Session = man.Session
-        
-    def _del__(self):
-        self.session.close()
+        self.logger = man.logger
+        self._routine()
         
     def all(self):
-        return self.session.query(Task).all()
+        session = self.Session()
+        rv = session.query(Task).all()
+        rv = [ s.as_dict() for s in rv ]
+        session.close()
+        return rv
         
     def add(self, task):
-        rv = self.session.add(task)
-        self.session.commit()
-        return rv
+        session = self.Session()
+        if 'life_span' in task :
+            task['life_span'] = timedelta(seconds = task['life_span'])
+        task = Task(**task)
+        try:
+            session.add(task)
+            session.commit()
+            rv = task.id
+            return rv
+        except:
+            session.rollback()
+        finally: 
+            session.close()
+        
         
     def get(self, id_):
-        return self.session.query(Task).get(id_)
-        
-    def update(self, id_or_task, key_values={}):
-        if isinstance(id_or_task, Task):
-            rv =1
-        else:
-            rv = self.session.query(Task).filter(Task.id == id_or_service).update(key_values)
-        self.session.commit()
+        session = self.Session()
+        rv = session.query(Task).get(id_)
+        if rv:
+            rv = rv.as_dict()
+        session.close()
         return rv
         
-    def delete(self, id_or_task):
-        if isinstance(id_or_task, Task):
-            rv = self.session.delete(id_or_task)
-        else:
-            rv = self.session.query(Task).filter(Task.id == id_or_service).delete()
-        self.session.commit()
+    def update(self, id_, key_values={}):
+        session = self.Session()
+        try:
+            rv = session.query(Task).filter(Task.id == id_).update(key_values)
+            session.commit()
+            return rv
+        except:
+            session.rollback()
+        finally:
+            session.close()
+        
+    def delete(self, id_):
+        session = self.Session()
+        try:
+            rv = session.query(Task).filter(Task.id == id_).delete()
+            session.commit()
+            return rv
+        except:
+            session.rollback()
+        finally: 
+            session.close()
+        
+    
+    def top(self, type_, name, k):
+        session = self.Session()
+        
+        rv = session.query(Task).filter((Task.status == 'submitted') | (Task.status == 'expired'))\
+        .filter(Task.max_tries > 0)\
+        .filter((Task.type == type_) & (Task.name == name))\
+        .order_by(Task.priority.desc())\
+        .order_by(Task.last_updated)\
+        .limit(k)
+        
+        for r in rv:
+            rv.status = 'waiting'
+        rv = [ s.as_dict() for s in rv ]
+        session.commit()
+        session.close()
         return rv
     
+    def add_comment(self, id_, comment):
+        session = self.Session()
+        task = session.query(Task).get(id_)
+        if task:
+            comments = task.comments
+            comments.append(comment)
+            try:
+                rv = session.query(Task).filter(Task.id == id_).update({'comments': comments})
+                session.commit()
+                return rv
+            except:
+                session.rollback()
+            finally:
+                session.close()
+        else:
+            raise Exception('No task has this ID')
 
+        
+        
+    def query(self, filters):
+        session = self.Session()
+        rv =  session.query(Task)
+        #filters = filters_convertor(Task, filters)
+        if len(filters) == 0:
+           rv = rv.all()
+        else:
+            for k,v in filters.items():
+                rv = rv.filter(getattr(Task,k) == v)
+                #print(str(rv))
+        rv = [ s.as_dict() for s in rv]
+        session.close()
+        return rv
+            
+    def pagination(self, filters, order_by, page_size, page_index, desc_=False):
+        session = self.Session()
+        if desc_:
+            rv = session.query(Task).order_by(desc(order_by))
+        else:
+            rv = session.query(Task).order_by(order_by)
+        filters = list(filters.items())
+        if len(filters) == 0:
+            rv = rv.all()
+        for f in filters:
+            k,v = f
+            rv = rv.filter(k == v)
+        rv = rv[page_size * page_index : page_size * (page_index + 1)]
+        rv = [ s.as_dict() for s in rv]
+        session.close()
+        return rv
+        
+        
+    def _routine(self):
+        session = self.Session()
+        
+        session.query(Task).filter(Task.status == 'processing')\
+        .filter(Task.last_updated < datetime.now() - Task.life_span ).update({'status': 'expired'})
+        
+        session.query(Task).filter(Task.status == 'wating')\
+        .filter(Task.last_updated + timedelta(minutes=1) < datetime.now() ).update({'status': 'submitted'})
+        
+        session.commit()
+        session.close()
+        timer = threading.Timer(60, self._routine)
+        timer.start()
+        
+        
 
 class ServiceManager():
     
@@ -114,12 +222,16 @@ class ServiceManager():
     def add(self, service):
         session = self.Session()
         service = Service(**service)
-        session.add(service)
-        session.commit()
-        self.logger.warning('{} has been added to neutuse.'.format(service))
-        rv = service.id
-        session.close()
-        return rv
+        try:
+            session.add(service)
+            session.commit()
+            self.logger.warning('{} has been added to neutuse.'.format(service))
+            rv = service.id
+            return rv
+        except:
+            session.rollback()
+        finally:
+            session.close()
         
     def get(self, id_):
         session = self.Session()
@@ -130,21 +242,31 @@ class ServiceManager():
         
     def update(self, id_, key_values={}):
         session = self.Session()
-        rv = session.query(Service).filter(Service.id == id_).update(key_values)
-        session.commit()
-        session.close()
-        return rv
+        try:
+            rv = session.query(Service).filter(Service.id == id_).update(key_values)
+            session.commit()
+            return rv
+        except:
+            session.rollback()
+        finally:
+            session.close()
+        
         
     def delete(self, id_):
         session = self.Session()
-        rv = session.query(Service).filter(Service.id == id_).delete()
-        session.commit()
-        session.close()
-        return rv
+        try:
+            rv = session.query(Service).filter(Service.id == id_).delete()
+            session.commit()
+            return rv
+        except:
+            session.rollback()
+        finally:
+            session.close()
+        
     
     def _routine(self):
         session = self.Session()
-        expired = session.query(Service).filter(Service.last_active < datetime.now() - timedelta(minutes=1) )
+        expired = session.query(Service).filter(Service.last_active < datetime.now() - timedelta(minutes=3) )
         for e in expired:
             self.logger.warning('{} is down'.format(e))
             session.delete(e)

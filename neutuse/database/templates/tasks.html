@@ -64,11 +64,10 @@ function update(){
                         content+="<td style='word-wrap:break-word;'><div>"+value["priority"]+"</div></td>";
                         content+="<td style='word-wrap:break-word;'><div>"+value["life_span"]+"</div></td>";
                         content+="<td style='word-wrap:break-word;'><div>"+value["max_tries"]+"</div></td>";
-                        date.setTime(value["submitted"]*1000);
-                        content+="<td style='word-wrap:break-word;'><div>"+date.toLocaleString()+"</div></td>";
-                        date.setTime(value["last_updated"]*1000);
-                        content+="<td style='word-wrap:break-word;'><div>"+date.toLocaleString()+"</div></td>";                      
+                        content+="<td style='word-wrap:break-word;'><div>"+value["submitted"]+"</div></td>";
+                        content+="<td style='word-wrap:break-word;'><div>"+value["last_updated"]+"</div></td>";                      
                         content+="<td style='word-wrap:break-word;'><div>"+JSON.stringify(value["comments"])+"</div></td>";
+                        content+="<td style='word-wrap:break-word;'><div>"+value["service_id"]+"</div></td>";
                         content+="<td style='word-wrap:break-word;'><div>"+value["type"]+"</div></td>";
                         content+="<td style='word-wrap:break-word;'><div>"+value["name"]+"</div></td>";
                         content+="<td style='word-wrap:break-word;'><div>"+value["user"]+"</div></td>";
@@ -124,6 +123,7 @@ $(document).ready(function(){
                     <th >submitted</th>
                     <th >last_updated</th>         
                     <th >comments</th>
+                    <th >processed_by</th>
                     <th >type</th>
                     <th >name</th>
                     <th >user</th>
@@ -131,6 +131,7 @@ $(document).ready(function(){
                 </tr>
             </thead>
             <tr class="table-info">
+                <td></td>
                 <td></td>
                 <td></td>
                 <td></td>
