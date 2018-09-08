@@ -1,7 +1,7 @@
 address:
     host: 127.0.0.1
     port: 5000
-backend: sqlite:test.db
+backend: sqlite:///test.db
 retry: 1
 slack: 
     token_file: /home/deli/slack_token.txt

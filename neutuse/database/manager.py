@@ -65,6 +65,7 @@ class TaskManager():
     def __init__(self, man):
         self.Session = man.Session
         self.logger = man.logger
+        self.locks = {}
         self._routine()
         
     def all(self):
@@ -120,22 +121,24 @@ class TaskManager():
         finally: 
             session.close()
         
-    
     def top(self, type_, name, k):
         session = self.Session()
-        
-        rv = session.query(Task).filter((Task.status == 'submitted') | (Task.status == 'expired'))\
-        .filter(Task.max_tries > 0)\
-        .filter((Task.type == type_) & (Task.name == name))\
-        .order_by(Task.priority.desc())\
-        .order_by(Task.last_updated)\
-        .limit(k)
-        
-        for r in rv:
-            rv.status = 'waiting'
-        rv = [ s.as_dict() for s in rv ]
-        session.commit()
-        session.close()
+        lock = self.locks.setdefault((type_,name),threading.Lock())
+        with lock:
+            tasks = session.query(Task).filter((Task.status == 'submitted') | (Task.status == 'expired'))\
+            .filter(Task.max_tries > 0)\
+            .filter((Task.type == type_) & (Task.name == name))\
+            .order_by(Task.priority.desc())\
+            .order_by(Task.last_updated)\
+            .limit(k)
+            rv = []
+            for r in tasks:
+                session.query(Task).filter(Task.id == r.id).update({'status':'waiting'})
+                rv.append(r)
+            rv = [ s.as_dict() for s in rv ]
+            print(rv)
+            session.commit()
+            session.close()
         return rv
     
     def add_comment(self, id_, comment):
@@ -177,12 +180,10 @@ class TaskManager():
             rv = session.query(Task).order_by(desc(order_by))
         else:
             rv = session.query(Task).order_by(order_by)
-        filters = list(filters.items())
         if len(filters) == 0:
             rv = rv.all()
-        for f in filters:
-            k,v = f
-            rv = rv.filter(k == v)
+        for k,v in filters.items():
+            rv = rv.filter(getattr(Task,k) == v)
         rv = rv[page_size * page_index : page_size * (page_index + 1)]
         rv = [ s.as_dict() for s in rv]
         session.close()
@@ -195,7 +196,7 @@ class TaskManager():
         session.query(Task).filter(Task.status == 'processing')\
         .filter(Task.last_updated < datetime.now() - Task.life_span ).update({'status': 'expired'})
         
-        session.query(Task).filter(Task.status == 'wating')\
+        session.query(Task).filter(Task.status == 'waiting')\
         .filter(Task.last_updated + timedelta(minutes=1) < datetime.now() ).update({'status': 'submitted'})
         
         session.commit()
