@@ -1,13 +1,54 @@
 import threading
 import time
 from datetime import datetime, timedelta
+import logging
+import logging.handlers
+from logging import Handler
 
 
 from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker
 
 from neutuse.database.models import Base, Task, Service, filters_convertor
-from neutuse.database.utils.logger import Logger
+from neutuse.database.utils import mail, slack
+
+
+class EmailHandler(Handler):
+    
+    def __init__(self, email):
+        self.email = email
+        super(EmailHandler,self).__init__()
+    
+    def emit(self, record):
+        entry = self.format(record)
+        if self.email:
+            email = self.email
+            host = email['host']
+            user = email['user']
+            passwd = email['passwd']
+            port = email['port'] if 'port' in email else 25
+            sender = mail.MailSender(host,user,passwd,port)
+            for to in email['to']:
+                sender.add_receiver(to)
+            sender.set_subject('neutuse message')
+            sender.add_text(entry)
+            try:
+                sender.send()
+            except:
+                pass  
+
+    
+class SlackHandler(Handler):
+    def __init__(self, slack):
+        self.slack = slack
+        super(SlackHandler,self).__init__()
+        
+    def emit(self, record):
+        entry = self.format(record)
+        if self.slack:
+            token_file = self.slack['token_file']
+            channel = self.slack['channel']
+            slack.Slack('neutuse',token_file).send(channel, entry)
 
 
 class Manager():
@@ -33,10 +74,34 @@ class Manager():
         slack = kwargs.get('slack', None)
         self._init_logger(logfile, email, slack)
         
+        self.enable_retry = kwargs.get('enable_retry', False)
         self._init_sub_managers()
 
     def _init_logger(self, logfile, email, slack):
-        self._logger = Logger(logfile, email, slack)
+        self._logger = logging.getLogger('neutuse')
+        self._logger.setLevel(logging.INFO)        
+        logging.getLogger('werkzeug').disabled = True          
+        fmt = "%(asctime)-15s %(levelname)s %(filename)s.%(lineno)d %(threadName)s>>>> %(message)s"
+   
+        sh = logging.StreamHandler()
+        sh.setFormatter(logging.Formatter(fmt))
+        self._logger.addHandler(sh)
+        
+        if logfile:
+            fh = logging.handlers.RotatingFileHandler(logfile,maxBytes = 1024*1024*100, backupCount = 3)    
+            fh.setFormatter(logging.Formatter(fmt))
+            self._logger.addHandler(fh)
+        
+        eh = EmailHandler(email)
+        eh.setFormatter(logging.Formatter(fmt))
+        eh.setLevel(logging.WARNING)  
+        self._logger.addHandler(eh)
+        
+        slh = SlackHandler(slack)
+        slh.setFormatter(logging.Formatter(fmt))
+        slh.setLevel(logging.WARNING)  
+        self._logger.addHandler(slh)
+
         
     def _init_backend(self, backend):
         self.engine = create_engine(backend)
@@ -65,6 +130,7 @@ class TaskManager():
     def __init__(self, man):
         self.Session = man.Session
         self.logger = man.logger
+        self.enable_retry = man.enable_retry
         self.locks = {}
         self._routine()
         
@@ -125,8 +191,11 @@ class TaskManager():
         session = self.Session()
         lock = self.locks.setdefault((type_,name),threading.Lock())
         with lock:
-            tasks = session.query(Task).filter((Task.status == 'submitted') | (Task.status == 'expired'))\
-            .filter(Task.max_tries > 0)\
+            if self.enable_retry:
+                tasks = session.query(Task).filter((Task.status == 'submitted') | (Task.status == 'expired'))
+            else:
+                tasks = session.query(Task).filter(Task.status == 'submitted')
+            tasks = tasks.filter(Task.max_tries > 0)\
             .filter((Task.type == type_) & (Task.name == name))\
             .order_by(Task.priority.desc())\
             .order_by(Task.last_updated)\
@@ -134,9 +203,7 @@ class TaskManager():
             rv = []
             for r in tasks:
                 session.query(Task).filter(Task.id == r.id).update({'status':'waiting'})
-                rv.append(r)
-            rv = [ s.as_dict() for s in rv ]
-            print(rv)
+                rv.append(r.as_dict)
             session.commit()
             session.close()
         return rv
@@ -163,13 +230,11 @@ class TaskManager():
     def query(self, filters):
         session = self.Session()
         rv =  session.query(Task)
-        #filters = filters_convertor(Task, filters)
         if len(filters) == 0:
            rv = rv.all()
         else:
             for k,v in filters.items():
                 rv = rv.filter(getattr(Task,k) == v)
-                #print(str(rv))
         rv = [ s.as_dict() for s in rv]
         session.close()
         return rv
