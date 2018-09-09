@@ -1,18 +1,14 @@
-<html>
-<head>
-<title>Computing Service</title>
+{% extends "base.html" %}
 
-<link rel="stylesheet" href="{{url_for('static',filename='css/bootstrap.min.css')}}">
-<script type="text/javascript" src="{{url_for('static',filename='jquery-3.3.1.min.js')}}"></script>
-<script type="text/javascript" src="{{url_for('static',filename='js/bootstrap.min.js')}}"></script>
-<style>
+{% block style %}
 table{table-layout:fixed;word-break:break-all;}
 table td div{
     height:80px;
     overflow:auto;
 }
-</style>
-<script type="text/javascript">
+{% endblock %}
+
+{% block script %}
 
 var cur_num = 0;
 
@@ -67,7 +63,13 @@ function update(){
                         content+="<td style='word-wrap:break-word;'><div>"+value["submitted"]+"</div></td>";
                         content+="<td style='word-wrap:break-word;'><div>"+value["last_updated"]+"</div></td>";                      
                         content+="<td style='word-wrap:break-word;'><div>"+JSON.stringify(value["comments"])+"</div></td>";
-                        content+="<td style='word-wrap:break-word;'><div>"+value["service_id"]+"</div></td>";
+                        var processed_by = value["service_id"];
+                        if (processed_by){
+                            content+="<td style='word-wrap:break-word;'><div><a href={{config['addr']}}/services/"+processed_by+">"+processed_by+"</a></div></td>";
+                        }
+                        else{
+                            content+="<td style='word-wrap:break-word;'><div>"+processed_by+"</div></td>";
+                        }
                         content+="<td style='word-wrap:break-word;'><div>"+value["type"]+"</div></td>";
                         content+="<td style='word-wrap:break-word;'><div>"+value["name"]+"</div></td>";
                         content+="<td style='word-wrap:break-word;'><div>"+value["user"]+"</div></td>";
@@ -106,11 +108,11 @@ $(document).ready(function(){
         update();
     });
 });
-</script>
-</head>
+{% endblock %}
 
+{% block content %}
 
-<body class="container-fluid" style="padding:0px; spacing:0px;">
+<div class="container-fluid" style="padding:0px; spacing:0px;">
         <table id ="content" class="table table-bordered table-hover" >
             <thead class='thead-dark'>
                 <tr>
@@ -164,6 +166,5 @@ $(document).ready(function(){
                 <li class="page-item" id="next"><a class="page-link" href="#" onclick="page_next()">Next</a></li>
             </ul>
         </div>
-</body>
-
-</html>
+</div>
+{% endblock %}

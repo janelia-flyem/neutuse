@@ -29,6 +29,11 @@ class TaskProcessor():
     '''Subclasses should define __type_name__ variable.'''
     __type_name__= ('','')
     
+    __description__ = ''
+    
+    __mode__ = 'pull'
+    
+    __push_url__ = ''
     
     def __init__(self, config):
         '''
@@ -65,7 +70,8 @@ class TaskProcessor():
             self.logger.addHandler(fh)
     
     def _register(self):
-        service = {'type':self.type,'name':self.name}
+        service = {'type':self.type, 'name':self.name, 'schema':self.__schema__,
+                    'description':self.__description__, 'mode':self.__mode__, 'push_url':self.__push_url__}
         url = neutuse_url.get_service_registration_url(self.addr)
         rv = rq.post(url, headers={'Content-Type' : 'application/json'}, data=json.dumps(service))
         self.id = rv.json()['id']
@@ -90,10 +96,9 @@ class TaskProcessor():
         url = neutuse_url.get_task_comment_url(self.addr,task['id'])
         rq.post(url, headers={'Content-Type' : 'application/json'}, data=json.dumps(comment))
     
-    def _send_processing(self, task):
-        url = neutuse_url.get_task_ack_url(self.addr,task['id'])
+    def ack(self, task):
+        url = neutuse_url.get_task_ack_url(self.addr, task['id'], self.id)
         rv = rq.post(url)
-        self.log(task,'service_id: {}'.format(self.id))
         self.logger.info('Send processing message for task {}, status: {}'.format(task['id'],str(rv.status_code ==200)))
         if rv.status_code !=200 :
             self.logger.info(rv.text)
@@ -101,7 +106,7 @@ class TaskProcessor():
     def fail(self, task):
         with self.lock:
             self.cur_num_workers -= 1
-        url = neutuse_url.get_task_fail_url(self.addr,task['id'])
+        url = neutuse_url.get_task_fail_url(self.addr,task['id'], self.id)
         rv = rq.post(url)
         self.logger.info('Send failed message for task {}, status: {}'.format(task['id'],str(rv.status_code ==200)))
         if rv.status_code !=200 :
@@ -110,7 +115,7 @@ class TaskProcessor():
     def success(self, task):
         with self.lock:
             self.cur_num_workers -= 1
-        url = neutuse_url.get_task_success_url(self.addr,task['id'])
+        url = neutuse_url.get_task_success_url(self.addr,task['id'], self.id)
         rv = rq.post(url)
         self.logger.info('Send success message for task {}, status: {}'.format(task['id'],str(rv.status_code ==200)))
         if rv.status_code !=200 :
@@ -121,11 +126,11 @@ class TaskProcessor():
             if (self.__schema__[key]['required']):
                 if key not in config:
                     return False
-                if not isinstance(config[key], self.__schema__[key]['type']):
+                if type(config[key]).__name__ !=  self.__schema__[key]['type']:
                     return False
             else:
                 if key in config:
-                    if not isinstance(config[key], self.__schema__[key]['type']):
+                    if type(config[key]).__name__ !=  self.__schema__[key]['type']:
                         return False
         return True
              
@@ -152,10 +157,10 @@ class TaskProcessor():
                             else:
                                 self.logger.info('Verify schema for task {} failed'.format(task['id']))
                                 self.log(task,'invalid schema')
-                                url = neutuse_url.get_task_fail_url(self.addr, task['id'])
+                                url = neutuse_url.get_task_fail_url(self.addr, task['id'], self.id)
                                 rq.post(url)
                         for task in tasks:
-                            self._send_processing(task)
+                            self.ack(task)
                             with self.lock:
                                 self.cur_num_workers += 1
                             self.logger.info('Start processing task {}'.format(task['id']))

@@ -5,8 +5,8 @@ from neutuse.process.taskproc import TaskProcessor
 class Default(TaskProcessor):
 
     __schema__ = {
-        'cmd': {'required': True, 'type': str},
-        'success_code': {'required' : False, 'type': int}
+        'cmd': {'required': True, 'type': str.__name__},
+        'success_code': {'required' : False, 'type': int.__name__}
     }
     
     __type_name__ = ('default', 'default')

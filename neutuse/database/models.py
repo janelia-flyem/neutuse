@@ -21,25 +21,7 @@ def as_dict(self):
     return rv
 
 
-def filters_convertor(model, filters):
-    rv = {}
-    c = model.__table__.columns
-    for k,v in filters.items():
-        if type(c[k].type) == Integer:
-            rv[k] = int(v)
-        elif type(c[k].type) == String:
-            rv[k] = str(v)
-        elif type(c[k].type) == Text:
-            rv[k] = str(v)
-        elif type(c[k].type) == Interval:
-            rv[k] = datetime.timedelta(seconds = v)
-        else:
-            rv[k] = v
-    return rv
-
-
 Base.as_dict = as_dict
-Base.filters_convertor = filters_convertor
 
 
 class Json(TypeDecorator):
@@ -51,6 +33,7 @@ class Json(TypeDecorator):
       
     def process_result_value(self, value, dialect):
         return json.loads(value)
+
 
 class Dict(TypeDecorator):
     
@@ -91,8 +74,8 @@ class Task(Base):
     priority = Column(Integer, default=0)
     life_span = Column(Interval, default=datetime.timedelta(hours=1))
     max_tries = Column(Integer, default=1)
-    submitted = Column(DateTime, default=datetime.datetime.now())
-    last_updated = Column(DateTime, default=datetime.datetime.now())
+    submitted = Column(DateTime, default=datetime.datetime.now)
+    last_updated = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     comments = Column(List, default=[])
     user = Column(String(128), default='anonymous')
     service_id = Column(Integer, ForeignKey('services.id'))
@@ -113,17 +96,17 @@ class Service(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     type = Column(String(128), nullable=False, index=True)
     name = Column(String(128), nullable=False, index=True)
-    schema = Column(Dict, default={})
+    schema = Column(Dict, default = {})
     status = Column(String(128), default='ready')
-    last_active = Column(DateTime, default=datetime.datetime.now())
-    created = Column(DateTime, default=datetime.datetime.now())
+    last_active = Column(DateTime, default=datetime.datetime.now)
+    created = Column(DateTime, default=datetime.datetime.now)
     description = Column(Text, default='')
     mode = Column(String(128), default='pull')
     push_url = Column(String(128), default='')
     tasks = relationship('Task', backref='service')
     
     def __repr__(self):
-        return '''<Service(id={}, type={}, name={}, schema={}, status={}, last_active={}, created={}, description={}, mode={}, push_url={}, tasks={})>'''.format(self.id, self.type, self.name, self.schema, self.status, self.last_active, self.created, self.description, self.mode, self.push_url, self.tasks)
+        return '''<Service(id={}, type={}, name={}, schema={}, status={}, last_active={}, created={}, description={}, mode={}, push_url={})>'''.format(self.id, self.type, self.name, self.schema, self.status, self.last_active, self.created, self.description, self.mode, self.push_url)
     
 
 if __name__ == '__main__':

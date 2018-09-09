@@ -43,7 +43,7 @@ def logging_and_check(func):
 @bp.route('/services', methods=['GET'])
 @logging_and_check
 def service_list():
-    service_list = Manager.get().service.all()
+    service_list = Manager.get().service.online_services()
     if len(service_list) > 0:
         return jsonify(service_list)
     rv = 'FAILED: No active services found'
@@ -56,19 +56,24 @@ def service_list():
 @logging_and_check
 def create_service():
     config = request.json
-    if 'type' in config and 'name' in config:
-        id_ = Manager.get().service.add({'type':config['type'], 'name':config['name']})
-        return jsonify(Manager.get().service.get(id_))
-    rv = 'FAILED: Missing task type or name'
-    Manager.get().logger.info(rv)
-    return rv, 400
+    id_ = Manager.get().service.add(config)
+    return jsonify(Manager.get().service.get(id_))
+
+    
+
+@bp.route('/services/<int:id_>/', methods=['GET'])
+@bp.route('/services/<int:id_>', methods=['GET'])
+@logging_and_check
+def get_service_by_id(id_):
+    rv = Manager.get().service.get(id_)
+    return jsonify(rv)
     
 
 @bp.route('/services/<int:id_>/pulse/', methods=['POST'])
 @bp.route('/services/<int:id_>/pulse', methods=['POST'])
 @logging_and_check
 def pulse(id_):
-    if Manager.get().service.update(id_, {'last_active': datetime.now()}):
+    if Manager.get().service.update(id_, {'last_active': datetime.now(), 'status':'ready'}):
         return jsonify(Manager.get().service.get(id_))
     rv = 'FAILED: No services have this id'
     Manager.get().logger.info(rv)
@@ -142,13 +147,13 @@ def post_tasks():
 
 
 #update status :processing ,failed or done
-@bp.route('/tasks/<int:id_>/status/<string:status>/', methods=['POST'])
-@bp.route('/tasks/<int:id_>/status/<string:status>', methods=['POST'])
+@bp.route('/tasks/<int:id_>/status/<string:status>/<int:service_id>', methods=['POST'])
+@bp.route('/tasks/<int:id_>/status/<string:status>/<int:service_id>', methods=['POST'])
 @logging_and_check
-def update_status(id_, status):
+def update_status(id_, status, service_id):
     if not status in ('processing', 'failed', 'done'):
         raise Exception('Illegal status')
-    Manager.get().task.update(id_, {'status':status})
+    Manager.get().task.update(id_, {'status':status, 'service_id':service_id})
     return jsonify(Manager.get().task.get(id_))
         
 

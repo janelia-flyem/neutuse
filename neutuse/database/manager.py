@@ -9,7 +9,7 @@ from logging import Handler
 from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker
 
-from neutuse.database.models import Base, Task, Service, filters_convertor
+from neutuse.database.models import Base, Task, Service
 from neutuse.database.utils import mail, slack
 
 
@@ -128,6 +128,7 @@ class Manager():
 class TaskManager():
     
     def __init__(self, man):
+        self.man = man
         self.Session = man.Session
         self.logger = man.logger
         self.enable_retry = man.enable_retry
@@ -151,7 +152,8 @@ class TaskManager():
             session.commit()
             rv = task.id
             return rv
-        except:
+        except Exception as e:
+            print(e)
             session.rollback()
         finally: 
             session.close()
@@ -203,7 +205,7 @@ class TaskManager():
             rv = []
             for r in tasks:
                 session.query(Task).filter(Task.id == r.id).update({'status':'waiting'})
-                rv.append(r.as_dict)
+                rv.append(r.as_dict())
             session.commit()
             session.close()
         return rv
@@ -274,6 +276,7 @@ class TaskManager():
 class ServiceManager():
     
     def __init__(self, man):
+        self.man = man
         self.Session = man.Session
         self.logger = man.logger
         self._routine()
@@ -287,7 +290,9 @@ class ServiceManager():
         
     def add(self, service):
         session = self.Session()
+        print(service)
         service = Service(**service)
+        print(service)
         try:
             session.add(service)
             session.commit()
@@ -329,13 +334,23 @@ class ServiceManager():
         finally:
             session.close()
         
-    
+    def online_services(self):
+        session =self.Session()
+        
+        rv = session.query(Service).filter( (Service.status == 'ready') |  (Service.status == 'busy') )
+        rv = [s.as_dict() for s in rv ]
+        
+        session.close()
+        return rv
+        
+           
     def _routine(self):
         session = self.Session()
-        expired = session.query(Service).filter(Service.last_active < datetime.now() - timedelta(minutes=3) )
+        expired = session.query(Service).filter(Service.status != 'down')\
+        .filter(Service.last_active < datetime.now() - timedelta(minutes=3))
         for e in expired:
             self.logger.warning('{} is down'.format(e))
-            session.delete(e)
+            session.query(Service).filter(Service.id == e.id).update({'status':'down'})
         session.commit()
         session.close()
         timer = threading.Timer(60, self._routine)

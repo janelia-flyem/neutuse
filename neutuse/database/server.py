@@ -45,5 +45,5 @@ class Server():
         Manager.get().logger.info('start database service at {}'.format(self.addr))
         
     def run(self):
-        self.app.run(host=self.host, port=self.port)
+        self.app.run(host=self.host, port=self.port, debug=True)
 
