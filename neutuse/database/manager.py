@@ -364,15 +364,17 @@ class ServiceManager():
             for e in expired:
                 self.logger.warning('{} is down'.format(e))
                 session.query(Service).filter(Service.id == e.id).update({'status':'down'})
-                for t in self.man.query({'service_id': e.id}):
-                    self.man.update(t['id'], {'status':'failed'})
-                    self.man.add_comment(t['id'], 'Failed because the service is down')
+                for t in session.query(Task).filter( (Task.service_id == e.id) & (Task.status == 'processing') ):
+                    t.status = 'expired'
+                    comments = t.comments
+                    comments.append('Expired because service is down')
+                    session.query(Task).filter(Task.id == t.id).update({'comments':comments})
         except Exception as e:
             self.logger.warning(e)
         finally:
             session.commit()
             session.close()
-            timer = threading.Timer(5, self._routine)
+            timer = threading.Timer(20, self._routine)
             timer.start()
        
 
