@@ -364,6 +364,9 @@ class ServiceManager():
             for e in expired:
                 self.logger.warning('{} is down'.format(e))
                 session.query(Service).filter(Service.id == e.id).update({'status':'down'})
+                for t in self.man.query({'service_id': e.id}):
+                    self.man.update(t['id'], {'status':'failed'})
+                    self.man.add_comment(t['id'], 'Failed because the service is down')
         except Exception as e:
             self.logger.warning(e)
         finally:
