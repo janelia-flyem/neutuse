@@ -258,30 +258,32 @@ class TaskManager():
         return self._query(Task, filters, order_by, start_index, end_index, desc_)                
         
     def _routine(self):
-        session = self.Session()
-        
-        session.query(Task).filter(Task.status == 'processing')\
-        .filter(Task.last_updated < (datetime.now() - Task.life_span)).update({'status': 'expired'})
-        
-        session.query(Task).filter(Task.status == 'waiting')\
-        .filter(Task.last_updated  < (datetime.now() - timedelta(minutes=1))).update({'status': 'submitted'})
-        
-        tasks = session.query(Task).filter(Task.status == 'done')\
-        .filter(Task.last_updated < (datetime.now() - timedelta(days=1)))
-
         try:
+            session = self.Session()
+            
+            for t in session.query(Task).filter(Task.status == 'processing'):
+                if t.last_updated < (datetime.now() - t.life_span):
+                    t.status = 'expired'
+            session.query(Task).filter(Task.status == 'waiting')\
+            .filter(Task.last_updated  < (datetime.now() - timedelta(minutes=1))).update({'status': 'submitted'})
+            
+            tasks = session.query(Task).filter(Task.status == 'done')\
+            .filter(Task.last_updated < (datetime.now() - timedelta(days=1)))
+            
             for t in tasks:
                 history_task = t.as_dict()
+                history_task.pop('id')
                 history_task['life_span'] = timedelta(seconds = history_task['life_span'])
-                session.add(HistoryTask(**history_task))
+                history_task = HistoryTask(**history_task)
+                session.add(history_task)
                 session.delete(t)
-                session.commit()
         except Exception as e:
             self.man.logger.warning(e)
+            session.rollback()
         finally:
             session.commit()
             session.close()
-            timer = threading.Timer(5, self._routine)
+            timer = threading.Timer(20, self._routine)
             timer.start()
         
         
@@ -355,10 +357,10 @@ class ServiceManager():
         return rv
         
     def _routine(self):
-        session = self.Session()
-        expired = session.query(Service).filter(Service.status != 'down')\
-        .filter(Service.last_active < (datetime.now() - timedelta(minutes=3)))
         try:
+            session = self.Session()
+            expired = session.query(Service).filter(Service.status != 'down')\
+            .filter(Service.last_active < (datetime.now() - timedelta(minutes=3)))
             for e in expired:
                 self.logger.warning('{} is down'.format(e))
                 session.query(Service).filter(Service.id == e.id).update({'status':'down'})

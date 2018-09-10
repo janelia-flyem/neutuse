@@ -93,7 +93,7 @@ class HistoryTask(Base):
     
     __tablename__ = 'history_tasks'
     
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     type = Column(String(128), nullable=False, index=True)
     name = Column(String(128), nullable=False, index=True)
     description = Column(Text, default='')
@@ -109,7 +109,7 @@ class HistoryTask(Base):
     service_id = Column(Integer, ForeignKey('services.id'))
 
     def __repr__(self):
-        return '''<Task(id={}, type={}, name={}, description={}, config={},
+        return '''<HistoryTask(id={}, type={}, name={}, description={}, config={},
                     status={}, priority={}, life_span={}, max_tries={}, submitted={},
                     last_update={}, comments={}, user={}, service_id={})>'''.format(self.id,
                     self.type, self.name, self.description, self.config, self.status, self.priority,
