@@ -88,6 +88,34 @@ class Task(Base):
                     self.life_span, self.max_tries, self.submitted, self.last_updated, self.comments,
                     self.user, self.service_id)
         
+
+class HistoryTask(Base):
+    
+    __tablename__ = 'history_tasks'
+    
+    id = Column(Integer, primary_key=True)
+    type = Column(String(128), nullable=False, index=True)
+    name = Column(String(128), nullable=False, index=True)
+    description = Column(Text, default='')
+    config = Column(Dict, nullable=False)
+    status = Column(String(128), default='submitted')
+    priority = Column(Integer, default=0)
+    life_span = Column(Interval, default=datetime.timedelta(hours=1))
+    max_tries = Column(Integer, default=1)
+    submitted = Column(DateTime, default=datetime.datetime.now)
+    last_updated = Column(DateTime, default=datetime.datetime.now)
+    comments = Column(List, default=[])
+    user = Column(String(128), default='anonymous')
+    service_id = Column(Integer, ForeignKey('services.id'))
+
+    def __repr__(self):
+        return '''<Task(id={}, type={}, name={}, description={}, config={},
+                    status={}, priority={}, life_span={}, max_tries={}, submitted={},
+                    last_update={}, comments={}, user={}, service_id={})>'''.format(self.id,
+                    self.type, self.name, self.description, self.config, self.status, self.priority,
+                    self.life_span, self.max_tries, self.submitted, self.last_updated, self.comments,
+                    self.user, self.service_id)
+                    
  
 class Service(Base):
     

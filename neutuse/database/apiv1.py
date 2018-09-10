@@ -86,7 +86,9 @@ def pulse(id_):
 @logging_and_check
 def get_tasks_pagination(order_by, page_size, page_index):
     filters = request.args
-    rv = Manager.get().task.pagination(filters, order_by, page_size, page_index, True)
+    start_index = page_size * page_index
+    end_index = page_size * (page_index + 1)
+    rv = Manager.get().task.query(filters, order_by, start_index, end_index, True)
     if len(rv) == 0:
         raise Exception('No tasks meet the conditions')
     return jsonify(rv)

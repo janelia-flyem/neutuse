@@ -9,7 +9,7 @@ from logging import Handler
 from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker
 
-from neutuse.database.models import Base, Task, Service
+from neutuse.database.models import Base, Task, Service, HistoryTask
 from neutuse.database.utils import mail, slack
 
 
@@ -153,7 +153,7 @@ class TaskManager():
             rv = task.id
             return rv
         except Exception as e:
-            print(e)
+            self.logger.info(e)
             session.rollback()
         finally: 
             session.close()
@@ -228,48 +228,61 @@ class TaskManager():
             raise Exception('No task has this ID')
 
         
-        
-    def query(self, filters):
+    def _query(self, table, filters, order_by=None, start_index=0, end_index=None, desc_=False):
         session = self.Session()
-        rv =  session.query(Task)
+        rv =  session.query(table)
+        
+        if order_by:
+            if desc_:
+                rv = rv.order_by(desc(order_by))
+            else:
+                rv = rv.order_by(order_by)
+        
         if len(filters) == 0:
            rv = rv.all()
         else:
             for k,v in filters.items():
-                rv = rv.filter(getattr(Task,k) == v)
-        rv = [ s.as_dict() for s in rv]
-        session.close()
-        return rv
-            
-    def pagination(self, filters, order_by, page_size, page_index, desc_=False):
-        session = self.Session()
-        if desc_:
-            rv = session.query(Task).order_by(desc(order_by))
-        else:
-            rv = session.query(Task).order_by(order_by)
-        if len(filters) == 0:
-            rv = rv.all()
-        for k,v in filters.items():
-            rv = rv.filter(getattr(Task,k) == v)
-        rv = rv[page_size * page_index : page_size * (page_index + 1)]
-        rv = [ s.as_dict() for s in rv]
+                rv = rv.filter(getattr(table,k) == v)
+        rv = rv[start_index: end_index]
+        rv = [s.as_dict() for s in rv]
         session.close()
         return rv
         
+    def query(self, filters, order_by=None, start_index=0, end_index=None, desc_=False):
+        if 'status' in filters and filters['status'] == 'history':
+            new_filters = {}
+            for k,v in filters.items():
+                new_filters[k] = v
+            new_filters.pop('status')
+            return self._query(HistoryTask, new_filters, order_by, start_index, end_index, desc_)
+        return self._query(Task, filters, order_by, start_index, end_index, desc_)                
         
     def _routine(self):
         session = self.Session()
         
         session.query(Task).filter(Task.status == 'processing')\
-        .filter(Task.last_updated < datetime.now() - Task.life_span ).update({'status': 'expired'})
+        .filter(Task.last_updated < (datetime.now() - Task.life_span)).update({'status': 'expired'})
         
         session.query(Task).filter(Task.status == 'waiting')\
-        .filter(Task.last_updated + timedelta(minutes=1) < datetime.now() ).update({'status': 'submitted'})
+        .filter(Task.last_updated  < (datetime.now() - timedelta(minutes=1))).update({'status': 'submitted'})
         
-        session.commit()
-        session.close()
-        timer = threading.Timer(60, self._routine)
-        timer.start()
+        tasks = session.query(Task).filter(Task.status == 'done')\
+        .filter(Task.last_updated < (datetime.now() - timedelta(days=1)))
+
+        try:
+            for t in tasks:
+                history_task = t.as_dict()
+                history_task['life_span'] = timedelta(seconds = history_task['life_span'])
+                session.add(HistoryTask(**history_task))
+                session.delete(t)
+                session.commit()
+        except Exception as e:
+            self.man.logger.warning(e)
+        finally:
+            session.commit()
+            session.close()
+            timer = threading.Timer(5, self._routine)
+            timer.start()
         
         
 
@@ -290,9 +303,7 @@ class ServiceManager():
         
     def add(self, service):
         session = self.Session()
-        print(service)
         service = Service(**service)
-        print(service)
         try:
             session.add(service)
             session.commit()
@@ -343,18 +354,21 @@ class ServiceManager():
         session.close()
         return rv
         
-           
     def _routine(self):
         session = self.Session()
         expired = session.query(Service).filter(Service.status != 'down')\
-        .filter(Service.last_active < datetime.now() - timedelta(minutes=3))
-        for e in expired:
-            self.logger.warning('{} is down'.format(e))
-            session.query(Service).filter(Service.id == e.id).update({'status':'down'})
-        session.commit()
-        session.close()
-        timer = threading.Timer(60, self._routine)
-        timer.start()
+        .filter(Service.last_active < (datetime.now() - timedelta(minutes=3)))
+        try:
+            for e in expired:
+                self.logger.warning('{} is down'.format(e))
+                session.query(Service).filter(Service.id == e.id).update({'status':'down'})
+        except Exception as e:
+            self.logger.warning(e)
+        finally:
+            session.commit()
+            session.close()
+            timer = threading.Timer(5, self._routine)
+            timer.start()
        
 
 if __name__ == '__main__':
