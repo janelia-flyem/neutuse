@@ -1,5 +1,13 @@
 {% extends "base.html" %}
 
+{% block style %}
+table{table-layout:fixed;word-break:break-all;}
+table td div{
+    height:80px;
+    overflow:auto;
+}
+{% endblock %}
+
 {% block script %}
 
 function add_service_item(item){
@@ -9,7 +17,7 @@ function add_service_item(item){
     content+="<td style='word-wrap:break-word;'>"+item["id"]+"</td>";
     content+="<td style='word-wrap:break-word;'>"+item["type"]+"</td>";
     content+="<td style='word-wrap:break-word;'>"+item["name"]+"</td>";
-    content+="<td style='word-wrap:break-word;'>"+JSON.stringify(item["schema"])+"</td>";
+    content+="<td style='word-wrap:break-word;'>"+JSON.stringify(item["schema"],null,4)+"</td>";
     content+="<td style='word-wrap:break-word;'>"+item["description"]+"</td>";
     content+="<td style='word-wrap:break-word;'>"+item["mode"]+"</td>";
     content+="<td style='word-wrap:break-word;'>"+item["push_url"]+"</td>";

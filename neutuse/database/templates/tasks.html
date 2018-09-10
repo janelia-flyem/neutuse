@@ -56,7 +56,7 @@ function update(){
                         content+="<tr class='item'>";
                         content+="<td style='word-wrap:break-word;'><div>"+value["id"]+"</div></td>";
                         content+="<td style='word-wrap:break-word;'><div>"+value["description"]+"</div></td>";
-                        content+="<td style='word-wrap:break-word;'><div>"+JSON.stringify(value["config"])+"</div></td>";
+                        content+="<td style='word-wrap:break-word;'><div>"+JSON.stringify(value["config"],null,2)+"</div></td>";
                         content+="<td style='word-wrap:break-word;'><div>"+value["priority"]+"</div></td>";
                         content+="<td style='word-wrap:break-word;'><div>"+value["life_span"]+"</div></td>";
                         content+="<td style='word-wrap:break-word;'><div>"+value["max_tries"]+"</div></td>";
