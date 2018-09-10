@@ -1,47 +1,78 @@
-<html>
-<head>
-<title>Computing Service</title>
+{% extends "base.html" %}
 
-<link rel="stylesheet" href="{{url_for('static',filename='css/bootstrap.min.css')}}">
-<script type="text/javascript" src="{{url_for('static',filename='jquery-3.3.1.min.js')}}"></script>
-<script type="text/javascript" src="{{url_for('static',filename='js/bootstrap.min.js')}}"></script>
-<script type="text/javascript">
+{% block style %}
+table{table-layout:fixed;word-break:break-all;}
+table td div{
+    height:80px;
+    overflow:auto;
+}
+{% endblock %}
+
+{% block script %}
+
+function add_service_item(item){
+    var date=new Date();
+    var content="";
+    content+="<tr class='item'>";
+    content+="<td style='word-wrap:break-word;'>"+item["id"]+"</td>";
+    content+="<td style='word-wrap:break-word;'>"+item["type"]+"</td>";
+    content+="<td style='word-wrap:break-word;'>"+item["name"]+"</td>";
+    content+="<td style='word-wrap:break-word;'>"+JSON.stringify(item["schema"],null,4)+"</td>";
+    content+="<td style='word-wrap:break-word;'>"+item["description"]+"</td>";
+    content+="<td style='word-wrap:break-word;'>"+item["mode"]+"</td>";
+    content+="<td style='word-wrap:break-word;'>"+item["push_url"]+"</td>";
+    content+="<td style='word-wrap:break-word;'>"+item["created"]+"</td>";
+    content+="<td style='word-wrap:break-word;'>"+item["last_active"]+"</td>"; 
+    content+="<td style='word-wrap:break-word;'>"+item["status"]+"</td>";                   
+    $('#content').append(content);
+}
+
+function clear(){
+    $('tr').remove('.item');
+}
 
 function update(){
-    $.get(" {{config['addr']}}/api/v1/services",
-                function(result){
-                    var date=new Date();
-                    var content="";
-                    $.each(result,function(key,value){
-                        content+="<tr class='item'>";
-                        content+="<td style='word-wrap:break-word;'>"+value["id"]+"</td>";
-                        content+="<td style='word-wrap:break-word;'>"+value["type"]+"</td>";
-                        content+="<td style='word-wrap:break-word;'>"+value["name"]+"</td>";
-                        date.setTime(value["last_active"]*1000);
-                        content+="<td style='word-wrap:break-word;'>"+date.toLocaleString()+"</td>";                   
-                    });
-                    content+="</table>";
-                    $('tr').remove('.item');
-                    $('#content').append(content);
-                }
-    );
+    {% if id_ %}
+        $.get(" {{config['addr']}}/api/v1/services/"+{{ id_ }},
+                    function(result){
+                        clear();
+                        add_service_item(result);
+                    }
+        );
+    {% else %}
+        $.get(" {{config['addr']}}/api/v1/services",
+                    function(result){
+                        clear();
+                        $.each(result,function(key,value){
+                            add_service_item(value);          
+                        });
+                    }
+        );
+    {% endif %}
+    
 };
 $(document).ready(function(){
     update();
     setInterval("update()",5000);
 });
-</script>
-</head>
-<body>
+{% endblock %}
+
+
+{% block content %}
 <table id ="content" class="table table-bordered table-hover" style="table-layout:fixed">
     <thead class='thead-dark'>
         <tr>
             <th>id</th>
             <th>type</th>
             <th>name</th>
+            <th>schema</th>
+            <th>description</th>
+            <th>mode</th>
+            <th>push_url</th>
+            <th>submitted</th>
             <th>last_active</th>
+            <th>status</th>
         </tr>
     </thead>
 </table>
-</body>
-</html>
+{% endblock %}

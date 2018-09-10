@@ -16,3 +16,7 @@ def tasks():
 @bp.route('/services')
 def services():
     return render_template('services.html')
+    
+@bp.route('/services/<int:id_>')
+def services_by_id(id_):
+    return render_template('services.html', id_=id_)

@@ -10,11 +10,11 @@ from neutuse.process.taskproc import TaskProcessor
 class Skeletonize(TaskProcessor):
     
     __schema__ = {
-        'input' : {'required': False, 'type': str},
-        'dvid' : {'required': False, 'type': dict},
-        'force_update' : {'required': False, 'type': bool},
-        'bodyid' : {'required' : True, 'type' : int},
-        'output' : {'required' : False, 'type' : str}
+        'input' : {'required': False, 'type': str.__name__},
+        'dvid' : {'required': False, 'type': dict.__name__},
+        'force_update' : {'required': False, 'type': bool.__name__},
+        'bodyid' : {'required' : True, 'type' : int.__name__},
+        'output' : {'required' : False, 'type' : str.__name__}
     }
 
     __type_name__ = ['dvid', 'skeletonize']
