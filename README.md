@@ -17,7 +17,7 @@ If everything is fine, you should see 'OK' at the bottom of the screen
     1) Run database:
     neutuse run database [-a ADDR] [-b BACKEND] [-d DEBUG] [-r RETRY] [-l LOG] [-c CONFIG]
     ADDR: Address that the data base will be running, default is 127.0.0.1:5000.
-    BACKEND: Backend of the data base, default is sqlite:test.db.
+    BACKEND: Backend of the data base, default is sqlite:///test.db.
     DEBUG: Enable debug mode or not.
     RETRY: Enable retry mechanism or not. If this is turned on, expired tasks will be fetched again.
     LOG: Log file.
