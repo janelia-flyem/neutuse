@@ -149,7 +149,7 @@ class TaskProcessor():
             try:
                 if self.cur_num_workers < self.num_workers:
                     rv = self._fetch_tasks()
-                    if len(rv)>0:
+                    if len(rv) > 0:
                         tasks = []
                         for task in rv:
                             if self._verify(task['config']):

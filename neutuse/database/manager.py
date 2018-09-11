@@ -4,10 +4,11 @@ from datetime import datetime, timedelta
 import logging
 import logging.handlers
 from logging import Handler
-
+from functools import wraps
 
 from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import SQLAlchemyError
 
 from neutuse.database.models import Base, Task, Service, HistoryTask
 from neutuse.database.utils import mail, slack
@@ -125,78 +126,84 @@ class Manager():
         return self._logger
 
 
-class TaskManager():
+def session_wrapper(func):
+    @wraps(func)
+    def wrapper(self, *argv, **kwargs):
+        self._sessions[threading.currentThread().ident] = self.Session()
+        try:
+            rv = func(self, *argv, **kwargs)
+            if isinstance(rv, Base):
+                return rv.as_dict()
+            elif isinstance(rv ,list):
+                return [s.as_dict() for s in rv]
+            return rv
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            self.logger.warning(str(e))
+        finally:
+            self.session.commit()
+            self.session.close()
+            self._sessions.pop(threading.currentThread().ident)
+    return wrapper
+    
+
+class SubManager():
     
     def __init__(self, man):
         self.man = man
         self.Session = man.Session
         self.logger = man.logger
+        self._sessions = {}
+        
+    @property
+    def session(self):
+        return self._sessions[threading.currentThread().ident]
+        
+    @session_wrapper   
+    def all(self):
+        return self.session.query(self.model).all()    
+
+    @session_wrapper
+    def get(self, id_):
+        return  self.session.query(self.model).get(id_)
+        
+    @session_wrapper
+    def update(self, id_, key_values={}):
+        return self.session.query(self.model).filter(self.model.id == id_).update(key_values)
+     
+    @session_wrapper
+    def delete(self, id_):
+        return self.session.query(self.model).filter(self.model.id == id_).delete()   
+                  
+    @session_wrapper
+    def add(self, i):
+        i = self.model(**i)
+        self.session.add(i)
+        self.session.commit()
+        return i.id
+                
+
+class TaskManager(SubManager):
+    
+    def __init__(self, man):
+        self.model = Task
         self.enable_retry = man.enable_retry
         self.locks = {}
+        super(TaskManager,self).__init__(man)
         self._routine()
         
-    def all(self):
-        session = self.Session()
-        rv = session.query(Task).all()
-        rv = [ s.as_dict() for s in rv ]
-        session.close()
-        return rv
-        
     def add(self, task):
-        session = self.Session()
         if 'life_span' in task :
             task['life_span'] = timedelta(seconds = task['life_span'])
-        task = Task(**task)
-        try:
-            session.add(task)
-            session.commit()
-            rv = task.id
-            return rv
-        except Exception as e:
-            self.logger.info(e)
-            session.rollback()
-        finally: 
-            session.close()
-        
-        
-    def get(self, id_):
-        session = self.Session()
-        rv = session.query(Task).get(id_)
-        if rv:
-            rv = rv.as_dict()
-        session.close()
-        return rv
-        
-    def update(self, id_, key_values={}):
-        session = self.Session()
-        try:
-            rv = session.query(Task).filter(Task.id == id_).update(key_values)
-            session.commit()
-            return rv
-        except:
-            session.rollback()
-        finally:
-            session.close()
-        
-    def delete(self, id_):
-        session = self.Session()
-        try:
-            rv = session.query(Task).filter(Task.id == id_).delete()
-            session.commit()
-            return rv
-        except:
-            session.rollback()
-        finally: 
-            session.close()
-        
+        return super(TaskManager, self).add(task)
+                  
+    @session_wrapper    
     def top(self, type_, name, k):
-        session = self.Session()
-        lock = self.locks.setdefault((type_,name),threading.Lock())
-        with lock:
+        with self.locks.setdefault((type_,name),threading.Lock()):
             if self.enable_retry:
-                tasks = session.query(Task).filter((Task.status == 'submitted') | (Task.status == 'expired'))
+                tasks = self.session.query(Task).filter((Task.status == 'submitted') | (Task.status == 'expired'))
             else:
-                tasks = session.query(Task).filter(Task.status == 'submitted')
+                tasks = self.session.query(Task).filter(Task.status == 'submitted')
             tasks = tasks.filter(Task.max_tries > 0)\
             .filter((Task.type == type_) & (Task.name == name))\
             .order_by(Task.priority.desc())\
@@ -204,49 +211,33 @@ class TaskManager():
             .limit(k)
             rv = []
             for r in tasks:
-                session.query(Task).filter(Task.id == r.id).update({'status':'waiting'})
-                rv.append(r.as_dict())
-            session.commit()
-            session.close()
+                self.session.query(Task).filter(Task.id == r.id).update({'status':'waiting'})
+                rv.append(r)
         return rv
     
+    @session_wrapper
     def add_comment(self, id_, comment):
-        session = self.Session()
-        task = session.query(Task).get(id_)
+        task = self.session.query(Task).get(id_)
         if task:
             comments = task.comments
             comments.append(comment)
-            try:
-                rv = session.query(Task).filter(Task.id == id_).update({'comments': comments})
-                session.commit()
-                return rv
-            except:
-                session.rollback()
-            finally:
-                session.close()
-        else:
-            raise Exception('No task has this ID')
+            return self.session.query(Task).filter(Task.id == id_).update({'comments': comments})
+        return 0
 
-        
+    @session_wrapper 
     def _query(self, table, filters, order_by=None, start_index=0, end_index=None, desc_=False):
-        session = self.Session()
-        rv =  session.query(table)
-        
+        rv =  self.session.query(table)
         if order_by:
             if desc_:
                 rv = rv.order_by(desc(order_by))
             else:
                 rv = rv.order_by(order_by)
-        
         if len(filters) == 0:
            rv = rv.all()
         else:
             for k,v in filters.items():
                 rv = rv.filter(getattr(table,k) == v)
-        rv = rv[start_index: end_index]
-        rv = [s.as_dict() for s in rv]
-        session.close()
-        return rv
+        return rv[start_index: end_index]
         
     def query(self, filters, order_by=None, start_index=0, end_index=None, desc_=False):
         if 'status' in filters and filters['status'] == 'history':
@@ -288,73 +279,24 @@ class TaskManager():
         
         
 
-class ServiceManager():
+class ServiceManager(SubManager):
     
     def __init__(self, man):
-        self.man = man
-        self.Session = man.Session
-        self.logger = man.logger
+        self.model = Service
+        super(ServiceManager,self).__init__(man)
         self._routine()
-        
-    def all(self):
-        session = self.Session()
-        rv = session.query(Service).all()
-        rv = [ s.as_dict() for s in rv ]
-        session.close()
-        return rv
-        
+         
+    @session_wrapper     
     def add(self, service):
-        session = self.Session()
         service = Service(**service)
-        try:
-            session.add(service)
-            session.commit()
-            self.logger.warning('{} has been added to neutuse.'.format(service))
-            rv = service.id
-            return rv
-        except:
-            session.rollback()
-        finally:
-            session.close()
-        
-    def get(self, id_):
-        session = self.Session()
-        rv = session.query(Service).get(id_)
-        rv = rv.as_dict()
-        session.close()
-        return rv
-        
-    def update(self, id_, key_values={}):
-        session = self.Session()
-        try:
-            rv = session.query(Service).filter(Service.id == id_).update(key_values)
-            session.commit()
-            return rv
-        except:
-            session.rollback()
-        finally:
-            session.close()
-        
-        
-    def delete(self, id_):
-        session = self.Session()
-        try:
-            rv = session.query(Service).filter(Service.id == id_).delete()
-            session.commit()
-            return rv
-        except:
-            session.rollback()
-        finally:
-            session.close()
-        
+        self.session.add(service)
+        self.session.commit()
+        self.logger.warning('{} has been added to neutuse.'.format(service))
+        return service.id
+
+    @session_wrapper    
     def online_services(self):
-        session =self.Session()
-        
-        rv = session.query(Service).filter( (Service.status == 'ready') |  (Service.status == 'busy') )
-        rv = [s.as_dict() for s in rv ]
-        
-        session.close()
-        return rv
+        return self.session.query(Service).filter( (Service.status == 'ready') |  (Service.status == 'busy') ).all()
         
     def _routine(self):
         try:
