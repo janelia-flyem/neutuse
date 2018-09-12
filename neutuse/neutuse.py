@@ -6,9 +6,6 @@ import threading
 import requests as rq
 import yaml
 
-from .database import Server
-from .process import Engine
-
 
 __doc__ = '''Usage:
 
@@ -45,7 +42,8 @@ def run_database(addr, backend, enable_retry= False, debug=False, log_file='', e
         debug(bool): Enable debug mode or not
         log_file(str): Writing logs to which file.
         email_config(dict): Email config used to send and receive important information
-    '''    
+    '''
+    from .database import Server    
     database = Server(addr, backend, enable_retry, debug, log_file, email_config, slack_config)
     database.run()
 
@@ -56,6 +54,7 @@ def run_process(name, config):
         name(str): The name of process to run.
         config(dict): Configs passed to process
     '''
+    from .process import Engine
     services = [(name,config)]
     engine = Engine(services)
     engine.run()
