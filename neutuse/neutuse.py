@@ -101,11 +101,12 @@ def main():
     if (sys.argv[1] == 'run' or sys.argv[1] == 'start') and num_args >= 3 :
     
         if sys.argv[2] == 'database':
+            default_backend = 'sqlite:///test.db'
             parser.add_argument('-c', '--config', default='')
             parser.add_argument('-a', '--addr', default='127.0.0.1:5000')
             parser.add_argument('-d','--debug', action='store_true', default=False)
             parser.add_argument('-r','--retry', action='store_true', default=False)
-            parser.add_argument('-b','--backend', default='sqlite:test.db')
+            parser.add_argument('-b','--backend', default=default_backend)
             parser.add_argument('-l','--log', default='')
             args=parser.parse_args(sys.argv[3:])
             if args.config != '':
@@ -113,7 +114,7 @@ def main():
                     config = yaml.load(f)
                     addr = config.get('address',{'host': '127.0.0.1', 'port':5000})
                     addr = addr['host'] + ':' + str(addr['port'])
-                    backend = config.get('backend','sqlite:test.db')
+                    backend = config.get('backend', default_backend)
                     log = config.get('log','')
                     retry = config.get('retry',False)
                     debug  = config.get('debug', False)
