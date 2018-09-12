@@ -199,7 +199,7 @@ class TaskManager(SubManager):
                   
     @session_wrapper    
     def top(self, type_, name, k):
-        with self.locks.setdefault((type_,name),threading.Lock()):
+        with self.locks.setdefault((type_, name),threading.Lock()):
             if self.enable_retry:
                 tasks = self.session.query(Task).filter((Task.status == 'submitted') | (Task.status == 'expired'))
             else:
@@ -211,7 +211,7 @@ class TaskManager(SubManager):
             .limit(k)
             rv = []
             for r in tasks:
-                self.session.query(Task).filter(Task.id == r.id).update({'status':'waiting'})
+                self.session.query(Task).filter(Task.id == r.id).update({'status': 'waiting', 'max_tries': r.max_tries - 1})
                 rv.append(r)
         return rv
     
