@@ -104,7 +104,7 @@ def main():
             parser.add_argument('-a', '--addr', default='127.0.0.1:5000')
             parser.add_argument('-d','--debug', action='store_true', default=False)
             parser.add_argument('-r','--retry', action='store_true', default=False)
-            parser.add_argument('-b','--backend', default='sqlite:test.db')
+            parser.add_argument('-b','--backend', default='sqlite:///test.db')
             parser.add_argument('-l','--log', default='')
             args=parser.parse_args(sys.argv[3:])
             if args.config != '':
