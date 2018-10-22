@@ -197,8 +197,6 @@ class TaskManager(SubManager):
             task['life_span'] = timedelta(seconds = task['life_span'])
         if 'config' in task:
             config = task['config']
-            name = task['name']
-            type_ = task['type']
             for t in self.query({'type': task['type'], 'name': task['name']}):
                 if t['config'] == config:
                     raise(Exception('Task already exists'))
