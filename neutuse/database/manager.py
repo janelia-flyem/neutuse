@@ -191,10 +191,16 @@ class TaskManager(SubManager):
         self.locks = {}
         super(TaskManager,self).__init__(man)
         self._routine()
-        
+    
     def add(self, task):
         if 'life_span' in task :
             task['life_span'] = timedelta(seconds = task['life_span'])
+        if 'config' in task:
+            config = task['config']
+            for t in self.query({'type': task['type'], 'name': task['name']}):
+                print(1)
+                if t['config'] == config and t['status'] == 'submitted':
+                    raise(Exception('Task already exists'))
         return super(TaskManager, self).add(task)
                   
     @session_wrapper    

@@ -1,7 +1,7 @@
 import logging
 import logging.handlers
 
-from flask import Flask
+from flask import Flask, render_template
 
 from . import web
 from . import apiv1
@@ -16,7 +16,7 @@ class Server():
     It initializes flask app, database backends, logging system and so on.
     '''
     
-    def __init__(self, addr='127.0.0.1:5000', backend='sqlite:db.db',
+    def __init__(self, addr='127.0.0.1:5000', backend='sqlite:///test.db',
     enable_retry=False, debug=False, logfile='', email_config=None, slack_config =None):
         pos = addr.rfind(':')
         self.host, self.port = addr[:pos], addr[pos+1:]
@@ -40,7 +40,10 @@ class Server():
     def _init_app(self):
         self.app = Flask(__name__)
         self.app.config['addr'] = self.addr
-        self.app.register_blueprint(web.bp, url_prefix='/')
+        @self.app.route('/')
+        def index():
+    	    return render_template('index.html')
+        self.app.register_blueprint(web.bp, url_prefix='/web')
         self.app.register_blueprint(apiv1.bp, url_prefix='/api/v1')
         Manager.get().logger.info('start database service at {}'.format(self.addr))
         
