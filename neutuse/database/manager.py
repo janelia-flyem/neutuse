@@ -198,7 +198,8 @@ class TaskManager(SubManager):
         if 'config' in task:
             config = task['config']
             for t in self.query({'type': task['type'], 'name': task['name']}):
-                if t['config'] == config:
+                print(1)
+                if t['config'] == config and t['status'] == 'submitted':
                     raise(Exception('Task already exists'))
         return super(TaskManager, self).add(task)
                   
