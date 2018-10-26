@@ -197,8 +197,8 @@ class TaskManager(SubManager):
             task['life_span'] = timedelta(seconds = task['life_span'])
         if 'config' in task:
             config = task['config']
-            for t in self.query({'type': task['type'], 'name': task['name']}):
-                if t['config'] == config and t['status'] == 'submitted':
+            for t in self.query({'type': task['type'], 'name': task['name'], 'status': 'submitted'}):
+                if t['config'] == config:
                     return t['id']
         return super(TaskManager, self).add(task)
                   
