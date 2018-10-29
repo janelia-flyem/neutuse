@@ -1,5 +1,6 @@
 import json
 import datetime
+from collections import OrderedDict
 
 from sqlalchemy import Column, ForeignKey, String, Integer, Text, Interval, DateTime
 from sqlalchemy.types import TypeDecorator
@@ -35,6 +36,13 @@ class Json(TypeDecorator):
         return json.loads(value)
 
 
+def sort_dict(dic):
+    rv = OrderedDict()
+    for key in sorted(dic):
+        rv[key] = sort_dict(dic[key]) if isinstance(dic[key],dict) else dic[key]
+    return rv
+
+
 class Dict(TypeDecorator):
     
     impl = Text
@@ -42,6 +50,7 @@ class Dict(TypeDecorator):
     def process_bind_param(self, value, dialect):
         if not isinstance(value,dict):
             raise TypeError(str(value) + ' is not a dict')
+        value = sort_dict(value)
         return json.dumps(value)
       
     def process_result_value(self, value, dialect):
