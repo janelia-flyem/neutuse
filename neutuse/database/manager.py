@@ -10,7 +10,7 @@ from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
 
-from neutuse.database.models import Base, Task, Service, HistoryTask, sort_dict
+from neutuse.database.models import Base, Task, Service, HistoryTask
 from neutuse.database.utils import mail, slack
 
 
@@ -196,8 +196,8 @@ class TaskManager(SubManager):
         if 'life_span' in task :
             task['life_span'] = timedelta(seconds = task['life_span'])
         if 'config' in task:
-            config = sort_dict(task['config'])
-            for t in self.query({'type': task['type'], 'name': task['name'], 'status': 'submitted','config': config}):
+            for t in self.query({'type': task['type'], 'name': task['name'], 'status': 'submitted','config': task['config']}):
+                self.update(t['id'], {'max_tries'  : t['max_tries'] + 1})
                 return t['id']
         return super(TaskManager, self).add(task)
                   
