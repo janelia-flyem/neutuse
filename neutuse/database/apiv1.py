@@ -95,6 +95,15 @@ def get_tasks_pagination(order_by, page_size, page_index):
     
 
 #query
+@bp.route('/tasks/count/', methods=['GET'])
+@bp.route('/tasks/count', methods=['GET'])
+@logging_and_check
+def count_tasks():
+    filters = request.args
+    return jsonify(Manager.get().task.count(filters))
+
+
+#query
 @bp.route('/tasks/', methods=['GET'])
 @bp.route('/tasks', methods=['GET'])
 @logging_and_check
@@ -144,6 +153,8 @@ def top(type_, name, cnt):
 @logging_and_check
 def post_tasks():
     config = request.json
+    if not 'config' in config:
+        config['config'] = {}
     id_ = Manager.get().task.add(config)
     return jsonify(Manager.get().task.get(id_))
 
