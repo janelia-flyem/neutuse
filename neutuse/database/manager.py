@@ -174,7 +174,14 @@ class SubManager():
     @session_wrapper
     def delete(self, id_):
         return self.session.query(self.model).filter(self.model.id == id_).delete()   
-                  
+
+    @session_wrapper
+    def delete_by_filters(self, filters):
+        tasks = self.session.query(self.model)
+        for k,v in filters.items():
+            tasks = tasks.filter(getattr(self.model,k) == v)
+        return tasks.delete()  
+                
     @session_wrapper
     def add(self, i):
         i = self.model(**i)

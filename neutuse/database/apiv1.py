@@ -148,6 +148,18 @@ def post_tasks():
     return jsonify(Manager.get().task.get(id_))
 
 
+#delete
+@bp.route('/tasks/', methods=['DELETE'])
+@bp.route('/tasks', methods=['DELETE'])
+@logging_and_check
+def delete_tasks():
+    filters = request.args
+    if 'user' not in filters or 'status' not in filters:
+        raise Exception('user and status must be specified')
+    rv = Manager.get().task.delete_by_filters(filters)
+    return jsonify(rv)
+    
+
 #update status :processing ,failed or done
 @bp.route('/tasks/<int:id_>/status/<string:status>/<int:service_id>', methods=['POST'])
 @bp.route('/tasks/<int:id_>/status/<string:status>/<int:service_id>', methods=['POST'])
