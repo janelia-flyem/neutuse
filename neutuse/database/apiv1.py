@@ -95,6 +95,15 @@ def get_tasks_pagination(order_by, page_size, page_index):
     
 
 #query
+@bp.route('/tasks/count/', methods=['GET'])
+@bp.route('/tasks/count', methods=['GET'])
+@logging_and_check
+def count_tasks():
+    filters = request.args
+    return jsonify(Manager.get().task.count(filters))
+
+
+#query
 @bp.route('/tasks/', methods=['GET'])
 @bp.route('/tasks', methods=['GET'])
 @logging_and_check
@@ -144,9 +153,23 @@ def top(type_, name, cnt):
 @logging_and_check
 def post_tasks():
     config = request.json
+    if not 'config' in config:
+        config['config'] = {}
     id_ = Manager.get().task.add(config)
     return jsonify(Manager.get().task.get(id_))
 
+
+#delete
+@bp.route('/tasks/', methods=['DELETE'])
+@bp.route('/tasks', methods=['DELETE'])
+@logging_and_check
+def delete_tasks():
+    filters = request.args
+    if 'user' not in filters or 'status' not in filters:
+        raise Exception('user and status must be specified')
+    rv = Manager.get().task.delete_by_filters(filters)
+    return jsonify(rv)
+    
 
 #update status :processing ,failed or done
 @bp.route('/tasks/<int:id_>/status/<string:status>/<int:service_id>', methods=['POST'])
