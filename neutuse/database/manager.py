@@ -181,13 +181,6 @@ class SubManager():
         for k,v in filters.items():
             objects = objects.filter(getattr(self.model,k) == v)
         return objects.delete()  
-
-    @session_wrapper
-    def count(self, filters):
-        objects = self.session.query(self.model)
-        for k,v in filters.items():
-            objects = objects.filter(getattr(self.model,k) == v)
-        return objects.count()  
                 
     @session_wrapper
     def add(self, i):
@@ -201,6 +194,7 @@ class TaskManager(SubManager):
     
     def __init__(self, man):
         self.model = Task
+        self.history = HistoryTask
         self.enable_retry = man.enable_retry
         self.locks = {}
         super(TaskManager,self).__init__(man)
@@ -241,7 +235,25 @@ class TaskManager(SubManager):
             comments.append(comment)
             return self.session.query(Task).filter(Task.id == id_).update({'comments': comments})
         return 0
-
+    
+    
+    @session_wrapper
+    def count(self, filters):
+        if 'status' in filters and filters['status'] == 'history':
+            new_filters = {}
+            for k,v in filters.items():
+                new_filters[k] = v
+            new_filters.pop('status')
+            objects = self.session.query(self.history)
+            for k,v in filters.items():
+                objects = objects.filter(getattr(self.history,k) == v)
+            return objects.count()  
+        objects = self.session.query(self.model)
+        for k,v in filters.items():
+            objects = objects.filter(getattr(self.model,k) == v)
+        return objects.count()  
+        
+    
     @session_wrapper 
     def _query(self, table, filters, order_by=None, start_index=0, end_index=None, desc_=False):
         rv =  self.session.query(table)
