@@ -50,7 +50,7 @@ function update(){
     if ($('#status').val()!='all'){
         data['status']=$('#status').val();
     }
-    $.get(" {{config['addr']}}/api/v1/tasks/count/",function(result){
+    $.get(" {{config['addr']}}/api/v1/tasks/count/",data,function(result){
             page_cnt = Math.ceil(result/20)>0?Math.ceil(result/20):1;
             if(!$('#cur_page').is(":focus")){
                 $("#cur_page").val(cur_num+'/'+page_cnt);
