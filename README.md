@@ -1,4 +1,4 @@
-# Desciption
+# Description
 
 neutuse is a flexible serive oriented framework designed for connectome reconstrucion. 
 For details, see [wiki page](https://github.com/ephemera2015/neutuse/wiki)  
@@ -6,7 +6,7 @@ For details, see [wiki page](https://github.com/ephemera2015/neutuse/wiki)
 # Installation
 
 For running database, you should install pyzem first (https://github.com/janelia-flyem/pyzem)  
-git clone https://github.com/ephemera2015/neutuse.git   
+git clone https://github.com/janelia-flyem/neutuse.git   
 cd neutuse   
 python setup.py install
 
