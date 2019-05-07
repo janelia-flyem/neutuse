@@ -38,3 +38,65 @@ If everything is fine, you should see 'OK' at the bottom of the screen
     FILE: The name of file that describes the task.
     
 
+## Example setup (localhost)
+
+Run neutuse and the skeletonization service locally
+
+### Install neutuse and pyzem
+
+```
+git clone https://github.com/janelia-flyem/neutuse
+cd neutuse
+python setup.py install
+cd ..
+
+git clone https://github.com/janelia-flyem/pyzem
+cd pyzem
+python setup.py install
+cd ..
+```
+
+### Write configs
+
+**NOTE:** Edit the `command` below to point to the correct conda environment! 
+
+```
+mkdir neutuse-configs
+cd neutuse-configs
+
+$ cat > skeletonize_config.yaml << EOF
+number: 1
+log: /tmp/neutuse_skeletonize.log
+command: /miniconda/envs/neutu/bin/neutu
+EOF
+
+cat > process_config.yaml << EOF
+address:
+    host: localhost
+    port: 2018
+number: 1
+log: /tmp/neutuse.log
+process:
+    - name: skeletonize
+      config: skeletonize_config.yaml
+EOF
+```
+
+### Launch service and polling process
+
+```
+neutuse start database --config process_config.yaml
+
+# (in a separate terminal)
+neutuse start process --config process_config.yaml
+```
+
+### Configure NeuTu
+
+Click the settings button, and set "Remote Service" to:
+
+```
+neutuse:http://localhost:2018
+```
+
+![settings-screenshot](docs/settings-screenshot.png)
