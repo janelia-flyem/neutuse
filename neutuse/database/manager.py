@@ -129,7 +129,8 @@ class Manager():
 def session_wrapper(func):
     @wraps(func)
     def wrapper(self, *argv, **kwargs):
-        self._sessions[threading.currentThread().ident] = self.Session()
+        if not threading.currentThread().ident in self._sessions:
+            self._sessions[threading.currentThread().ident] = self.Session()
         try:
             rv = func(self, *argv, **kwargs)
             if isinstance(rv, Base):
@@ -143,9 +144,21 @@ def session_wrapper(func):
         finally:
             self.session.commit()
             self.session.close()
-            self._sessions.pop(threading.currentThread().ident)
+            if threading.currentThread().ident in self._sessions:
+                self._sessions.pop(threading.currentThread().ident)
     return wrapper
     
+
+def db_write_lock(func):
+    @wraps(func)
+    def wrapper(self, *argv, **kwargs):
+        with self.db_write_lock:
+            try:
+                return func(self, *argv, **kwargs)
+            except Exception as e:
+                self.logger.warning(str(e))
+    return wrapper
+
 
 class SubManager():
     
@@ -154,6 +167,7 @@ class SubManager():
         self.Session = man.Session
         self.logger = man.logger
         self._sessions = {}
+        self.db_write_lock = threading.Lock()
         
     @property
     def session(self):
@@ -200,6 +214,7 @@ class TaskManager(SubManager):
         super(TaskManager,self).__init__(man)
         self._routine()
     
+    @db_write_lock
     def add(self, task):
         if 'life_span' in task :
             task['life_span'] = timedelta(seconds = task['life_span'])
@@ -209,24 +224,25 @@ class TaskManager(SubManager):
                 return t['id']
         return super(TaskManager, self).add(task)
                   
+    @db_write_lock
     @session_wrapper    
     def top(self, type_, name, k):
-        with self.locks.setdefault((type_, name),threading.Lock()):
-            if self.enable_retry:
-                tasks = self.session.query(Task).filter((Task.status == 'submitted') | (Task.status == 'expired'))
-            else:
-                tasks = self.session.query(Task).filter(Task.status == 'submitted')
-            tasks = tasks.filter(Task.max_tries > 0)\
-            .filter((Task.type == type_) & (Task.name == name))\
-            .order_by(Task.priority.desc())\
-            .order_by(Task.last_updated)\
-            .limit(k)
-            rv = []
-            for r in tasks:
-                self.session.query(Task).filter(Task.id == r.id).update({'status': 'waiting', 'max_tries': r.max_tries - 1})
-                rv.append(r)
+        if self.enable_retry:
+            tasks = self.session.query(Task).filter((Task.status == 'submitted') | (Task.status == 'expired'))
+        else:
+            tasks = self.session.query(Task).filter(Task.status == 'submitted')
+        tasks = tasks.filter(Task.max_tries > 0)\
+        .filter((Task.type == type_) & (Task.name == name))\
+        .order_by(Task.priority.desc())\
+        .order_by(Task.last_updated)\
+        .limit(k)
+        rv = []
+        for r in tasks:
+            self.session.query(Task).filter(Task.id == r.id).update({'status': 'waiting', 'max_tries': r.max_tries - 1})
+            rv.append(r)
         return rv
     
+    @db_write_lock
     @session_wrapper
     def add_comment(self, id_, comment):
         task = self.session.query(Task).get(id_)
@@ -278,6 +294,7 @@ class TaskManager(SubManager):
             return self._query(HistoryTask, new_filters, order_by, start_index, end_index, desc_)
         return self._query(Task, filters, order_by, start_index, end_index, desc_)                
         
+    @db_write_lock
     def _routine(self):
         try:
             session = self.Session()
@@ -304,7 +321,7 @@ class TaskManager(SubManager):
         finally:
             session.commit()
             session.close()
-            timer = threading.Timer(20, self._routine)
+            timer = threading.Timer(60, self._routine)
             timer.start()
         
         
@@ -316,6 +333,7 @@ class ServiceManager(SubManager):
         super(ServiceManager,self).__init__(man)
         self._routine()
          
+    @db_write_lock
     @session_wrapper     
     def add(self, service):
         service = Service(**service)
@@ -327,7 +345,8 @@ class ServiceManager(SubManager):
     @session_wrapper    
     def online_services(self):
         return self.session.query(Service).filter( (Service.status == 'ready') |  (Service.status == 'busy') ).all()
-        
+    
+    @db_write_lock
     def _routine(self):
         try:
             session = self.Session()
@@ -346,7 +365,7 @@ class ServiceManager(SubManager):
         finally:
             session.commit()
             session.close()
-            timer = threading.Timer(20, self._routine)
+            timer = threading.Timer(60, self._routine)
             timer.start()
        
 
