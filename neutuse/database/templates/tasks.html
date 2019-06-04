@@ -74,7 +74,7 @@ function update(){
                         content+="<td style='word-wrap:break-word;'><div>"+JSON.stringify(value["comments"])+"</div></td>";
                         var processed_by = value["service_id"];
                         if (processed_by){
-                            content+="<td style='word-wrap:break-word;'><div><a href={{config['addr']}}/services/"+processed_by+">"+processed_by+"</a></div></td>";
+                            content+="<td style='word-wrap:break-word;'><div><a href={{config['addr']}}/web/services/"+processed_by+">"+processed_by+"</a></div></td>";
                         }
                         else{
                             content+="<td style='word-wrap:break-word;'><div>"+processed_by+"</div></td>";
