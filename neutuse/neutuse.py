@@ -30,6 +30,15 @@ __doc__ = '''Usage:
     neutuse post FILE [-a ADDR]
     ADDR: Address the database is running, default is 127.0.0.1:5000.
     FILE: The name of file that describes the task.
+    
+    4) Shutdown database:
+    neutuse shutdown databse [-a ADDR]
+    ADDR: Address the database is running, default is 127.0.0.1:5000.
+    
+    5) Shutdown process:
+    neutuse shutdown process PROCESS_ID [-a ADDR]
+    PROCESS_ID: Which process to shutdown.
+    ADDR: Address the database is running, default is 127.0.0.1:5000.
 '''
 
 
@@ -85,6 +94,41 @@ def post_task(addr, data):
     return rv.status_code == 200
 
 
+def shutdown_database(addr):
+    '''
+    Args:
+        addr(str): Which address the database is running. Example: 127.0.0.1:5000
+    '''
+    if not addr.startswith('http'):
+        addr = 'http://' + addr
+    if not addr.endswith('/'):
+        addr += '/'
+    addr += 'api/v1/database/shutdown'
+    try:
+        rv = rq.post(addr)
+    except:
+        pass
+    
+
+def shutdown_service(addr,service_id):
+    '''
+    Args:
+        addr(str): Which address the database is running. Example: 127.0.0.1:5000
+        service_id(int): Which service to shutdown.
+    Returns:
+        bool: success or fail
+    '''
+    if not addr.startswith('http'):
+        addr = 'http://' + addr
+    if not addr.endswith('/'):
+        addr += '/'
+    addr += 'api/v1/services/{}/shutdown'.format(service_id)
+    rv = rq.post(addr)
+    if rv.status_code !=200:
+        print(rv.text)
+    return rv.status_code == 200
+    
+    
 def help():
     print(__doc__)
     
@@ -171,6 +215,19 @@ def main():
             data=eval(f.read())    
         if post_task(args.addr, data):
             print('done')
+
+    elif sys.argv[1] == 'shutdown' and num_args >= 3:
+        if sys.argv[2] == 'database':
+            parser.add_argument('-a', '--addr', default='127.0.0.1:5000')
+            args=parser.parse_args(sys.argv[3:])
+            shutdown_database(args.addr)
+        elif sys.argv[2] == 'process':
+            parser.add_argument('service_id')
+            parser.add_argument('-a', '--addr', default='127.0.0.1:5000')
+            args=parser.parse_args(sys.argv[3:])
+            shutdown_service(args.addr,args.service_id)
+        else:
+            help()
     else:
         help()
     

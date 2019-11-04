@@ -1,3 +1,4 @@
+import sys,os
 import json
 import threading
 import time
@@ -79,8 +80,19 @@ class TaskProcessor():
         if rv.status_code != 200:
             self.logger.info(rv.text)
     
+    def _maybe_exit(self):
+        try:
+            rv = rq.get(neutuse_url.get_service_url(self.addr,self.id))
+            status = rv.json()['status']
+            if status == 'killed':
+                self.logger.info('Shutting down...')
+                os._exit(0)
+        except Exception as e:
+            self.logger.info(e)
+        
     def _pulse(self):
         try:
+            self._maybe_exit()
             rv = rq.post(neutuse_url.get_service_pulse_url(self.addr,self.id))
             self.logger.info('Pulse, status: {}'.format(str(rv.status_code  == 200)))
             if rv.status_code != 200:
@@ -89,7 +101,8 @@ class TaskProcessor():
         except Exception as e:
             self.logger.info(e)
         finally:
-            timer = threading.Timer(60, self._pulse)
+            timer = threading.Timer(10, self._pulse)
+            timer.setDaemon(True)
             timer.start()
         
     def log(self, task, comment):

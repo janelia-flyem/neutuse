@@ -322,6 +322,7 @@ class TaskManager(SubManager):
             session.commit()
             session.close()
             timer = threading.Timer(60, self._routine)
+            timer.setDaemon(True)
             timer.start()
         
         
@@ -366,6 +367,7 @@ class ServiceManager(SubManager):
             session.commit()
             session.close()
             timer = threading.Timer(60, self._routine)
+            timer.setDaemon(True)
             timer.start()
        
 
