@@ -110,11 +110,12 @@ def shutdown_database(addr):
         pass
     
 
-def shutdown_service(addr,service_id):
+def shutdown_service(addr,service_id,force):
     '''
     Args:
         addr(str): Which address the database is running. Example: 127.0.0.1:5000
         service_id(int): Which service to shutdown.
+        force: If this is true, the process will be closed immediately
     Returns:
         bool: success or fail
     '''
@@ -123,7 +124,14 @@ def shutdown_service(addr,service_id):
     if not addr.endswith('/'):
         addr += '/'
     addr += 'api/v1/services/{}/shutdown'.format(service_id)
-    rv = rq.post(addr)
+    
+    HEADERS={'Content-Type':'application/json'}
+    data = {}
+    if force:
+        data['force'] = True
+    else:
+        data['force'] = False
+    rv = rq.post(addr,data=json.dumps(data), headers=HEADERS)
     if rv.status_code !=200:
         print(rv.text)
     return rv.status_code == 200
@@ -223,9 +231,10 @@ def main():
             shutdown_database(args.addr)
         elif sys.argv[2] == 'process':
             parser.add_argument('service_id')
+            parser.add_argument('-f','--force', action='store_true', default=False)
             parser.add_argument('-a', '--addr', default='127.0.0.1:5000')
             args=parser.parse_args(sys.argv[3:])
-            shutdown_service(args.addr,args.service_id)
+            shutdown_service(args.addr,args.service_id,args.force)
         else:
             help()
     else:

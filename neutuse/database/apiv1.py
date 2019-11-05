@@ -85,10 +85,16 @@ def pulse(id_):
 @logging_and_check
 def service_shutdown(id_):
     service = Manager.get().service.get(id_)
-    if service and service['status'] not in ('down','killed'):
-        if Manager.get().service.update(id_, {'last_active': datetime.now(), 'status':'killed'}):
-            Manager.get().logger.info('Service #{} is shutting down'.format(id_))
-            return jsonify(Manager.get().service.get(id_))
+    if service and service['status'] not in ('down','killed','exit'):
+        config = request.json
+        if config['force']:
+            if Manager.get().service.update(id_, {'last_active': datetime.now(), 'status':'killed'}):
+                Manager.get().logger.info('Service #{} is shutting down'.format(id_))
+                return jsonify(Manager.get().service.get(id_))
+        else:
+            if Manager.get().service.update(id_, {'last_active': datetime.now(), 'status':'exit'}):
+                Manager.get().logger.info('Service #{} will be shutted down after tasks are finished...'.format(id_))
+                return jsonify(Manager.get().service.get(id_))
     return 'Service #{} is not active'.format(id_),400
 
     

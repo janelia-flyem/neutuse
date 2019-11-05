@@ -54,6 +54,7 @@ class TaskProcessor():
         self.num_workers = config.get('number',1)
         self.cur_num_workers = 0
         self.lock = threading.Lock()
+        self.exit = False
         self._init_logger()
         self._register()
         self._pulse()
@@ -85,8 +86,12 @@ class TaskProcessor():
             rv = rq.get(neutuse_url.get_service_url(self.addr,self.id))
             status = rv.json()['status']
             if status == 'killed':
-                self.logger.info('Shutting down...')
+                self.logger.info('Service is shutting down...')
                 os._exit(0)
+                #sys.exit(0)
+            if status == 'exit':
+                self.logger.info('Service will be shutted down after tasks are finished...')
+                self.exit = True
         except Exception as e:
             self.logger.info(e)
         
@@ -117,22 +122,22 @@ class TaskProcessor():
             self.logger.info(rv.text)
         
     def fail(self, task):
-        with self.lock:
-            self.cur_num_workers -= 1
         url = neutuse_url.get_task_fail_url(self.addr,task['id'], self.id)
         rv = rq.post(url)
         self.logger.info('Send failed message for task {}, status: {}'.format(task['id'],str(rv.status_code ==200)))
         if rv.status_code !=200 :
             self.logger.info(rv.text)
-        
-    def success(self, task):
         with self.lock:
             self.cur_num_workers -= 1
+            
+    def success(self, task):
         url = neutuse_url.get_task_success_url(self.addr,task['id'], self.id)
         rv = rq.post(url)
         self.logger.info('Send success message for task {}, status: {}'.format(task['id'],str(rv.status_code ==200)))
         if rv.status_code !=200 :
             self.logger.info(rv.text)
+        with self.lock:
+            self.cur_num_workers -= 1
             
     def _verify(self, config):
         for key in self.__schema__:
@@ -159,6 +164,12 @@ class TaskProcessor():
 
     def run(self):
         while True:
+            if self.exit:
+                print('Waiting {} tasks to be finished...'.format(self.cur_num_workers))
+                while self.cur_num_workers != 0:
+                    pass
+                self.logger.info('Service is shutting down...')
+                break
             try:
                 if self.cur_num_workers < self.num_workers:
                     rv = self._fetch_tasks()
@@ -177,7 +188,9 @@ class TaskProcessor():
                             with self.lock:
                                 self.cur_num_workers += 1
                             self.logger.info('Start processing task {}'.format(task['id']))
-                            threading.Thread(target=self.process, args=(task,)).start()
+                            t = threading.Thread(target=self.process, args=(task,))
+                            t.setDaemon(True)
+                            t.start()
                     else:
                         time.sleep(10)
             except ConnectionError as e:

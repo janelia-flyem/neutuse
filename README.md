@@ -42,9 +42,10 @@ If everything is fine, you should see 'OK' at the bottom of the screen
     ADDR: Address the database is running, default is 127.0.0.1:5000.
     
     5) Shutdown process:
-    neutuse shutdown process PROCESS_ID [-a ADDR]
+    neutuse shutdown process PROCESS_ID [-a ADDR] [-f FORCE]
     PROCESS_ID: Which process to shutdown.
     ADDR: Address the database is running, default is 127.0.0.1:5000.
+    FORCE: If this is set, the process will be closed immediately, otherwize it will be closed after tasks are finished.
     
 
 ## Example setup (localhost)
