@@ -2,7 +2,7 @@
 This file exposes RESTful HTTP APIS to interact with service manager and task manager.
 '''
 
-
+import sys,os
 from functools import wraps
 import json
 import threading
@@ -78,8 +78,35 @@ def pulse(id_):
     rv = 'FAILED: No services have this id'
     Manager.get().logger.info(rv)
     return rv, 400
+    
+    
+@bp.route('/services/<int:id_>/shutdown/', methods=['POST'])
+@bp.route('/services/<int:id_>/shutdown', methods=['POST'])
+@logging_and_check
+def service_shutdown(id_):
+    service = Manager.get().service.get(id_)
+    if service and service['status'] not in ('down','killed','exit'):
+        config = request.json
+        if config['force']:
+            if Manager.get().service.update(id_, {'last_active': datetime.now(), 'status':'killed'}):
+                Manager.get().logger.info('Service #{} is shutting down'.format(id_))
+                return jsonify(Manager.get().service.get(id_))
+        else:
+            if Manager.get().service.update(id_, {'last_active': datetime.now(), 'status':'exit'}):
+                Manager.get().logger.info('Service #{} will be shutted down after tasks are finished...'.format(id_))
+                return jsonify(Manager.get().service.get(id_))
+    return 'Service #{} is not active'.format(id_),400
 
-
+    
+@bp.route('/database/shutdown/', methods=['POST'])
+@bp.route('/database/shutdown', methods=['POST'])
+@logging_and_check
+def database_shutdown():
+    Manager.get().logger.info('Database is shutting down')
+    os._exit(0)
+    return 'ok',200
+    
+    
 #query
 @bp.route('/tasks/pagination/<string:order_by>/<int:page_size>/<int:page_index>', methods=['GET'])
 @bp.route('/tasks/pagination/<string_order_by>/<int:page_size><int:page_index>', methods=['GET'])

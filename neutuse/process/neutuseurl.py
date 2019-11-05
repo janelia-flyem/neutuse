@@ -13,7 +13,7 @@ class NeutuseUrl():
     @abstractmethod
     def get_service_pulse_url(self, base_addr):
         pass
-
+        
     @abstractmethod
     def get_task_comment_url(self, base_addr):
         pass
@@ -31,7 +31,11 @@ class NeutuseUrl():
         pass
         
     @abstractmethod
-    def get_task_topk_url(self, base_addr):
+    def get_task_topk_url(self, base_addr, type_, name, k):
+        pass
+        
+    @abstractmethod
+    def get_service_url(self, base_addr, service_id):
         pass
         
         
@@ -58,5 +62,7 @@ class NeutuseUrlV1(NeutuseUrl):
     def get_task_topk_url(self, base_addr, type_, name, k):
         return urljoin(base_addr,'/api/v1/tasks/top/{}/{}/{}'.format(type_, name, k))
         
+    def get_service_url(self, base_addr, service_id):
+        return urljoin(base_addr,'/api/v1/services/{}'.format(service_id))
         
 neutuse_url = NeutuseUrlV1()

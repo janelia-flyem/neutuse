@@ -322,6 +322,7 @@ class TaskManager(SubManager):
             session.commit()
             session.close()
             timer = threading.Timer(60, self._routine)
+            timer.setDaemon(True)
             timer.start()
         
         
@@ -351,7 +352,7 @@ class ServiceManager(SubManager):
         try:
             session = self.Session()
             expired = session.query(Service).filter(Service.status != 'down')\
-            .filter(Service.last_active < (datetime.now() - timedelta(minutes=3)))
+            .filter(Service.last_active < (datetime.now() - timedelta(minutes = 3)))
             for e in expired:
                 self.logger.warning('{} is down'.format(e))
                 session.query(Service).filter(Service.id == e.id).update({'status':'down'})
@@ -359,13 +360,14 @@ class ServiceManager(SubManager):
                     t.status = 'expired'
                     comments = t.comments
                     comments.append('Expired because service is down')
-                    session.query(Task).filter(Task.id == t.id).update({'comments':comments})
+                    session.query(Task).filter(Task.id == t.id).update({'comments':comments,'max_tries': t.max_tries + 1})
         except Exception as e:
             self.logger.warning(e)
         finally:
             session.commit()
             session.close()
             timer = threading.Timer(60, self._routine)
+            timer.setDaemon(True)
             timer.start()
        
 
