@@ -55,14 +55,14 @@ class TaskProcessor():
         self.cur_num_workers = 0
         self.lock = threading.Lock()
         self.exit = False
-        self._init_logger()
         self._register()
+        self._init_logger()
         self._pulse()
     
     def _init_logger(self):
         self.logger = logging.getLogger('neutuse'+self.log_file)
         self.logger.setLevel(logging.INFO)
-        fmt = "%(asctime)-15s %(levelname)s %(filename)s.%(lineno)d %(threadName)s>>>> %(message)s"
+        fmt = "<Service #{}>%(asctime)-15s %(levelname)s %(filename)s.%(lineno)d %(threadName)s>>>> %(message)s".format(self.id)
         sh = logging.StreamHandler()
         sh.setFormatter(logging.Formatter(fmt))
         self.logger.addHandler(sh)
@@ -77,7 +77,7 @@ class TaskProcessor():
         url = neutuse_url.get_service_registration_url(self.addr)
         rv = rq.post(url, headers={'Content-Type' : 'application/json'}, data=json.dumps(service))
         self.id = rv.json()['id']
-        self.logger.info('Register service {}, status: {}'.format(json.dumps(service),str(rv.status_code == 200)))
+        #self.logger.info('Register service {}, status: {}'.format(json.dumps(service),str(rv.status_code == 200)))
         if rv.status_code != 200:
             self.logger.info(rv.text)
     
