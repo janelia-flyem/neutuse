@@ -7,7 +7,7 @@ import requests as rq
 import yaml
 
 
-__doc__ = '''Usage:
+__doc__ = '''Usage (neutuse 1.0):
 
     1) Run database:
     neutuse run database [-a ADDR] [-b BACKEND] [-d DEBUG] [-r RETRY] [-l LOG] [-c CONFIG]
@@ -167,7 +167,7 @@ def main():
                     addr = addr['host'] + ':' + str(addr['port'])
                     backend = config.get('backend', default_backend)
                     log = config.get('log','')
-                    retry = config.get('retry',False)
+                    retry = config.get('retry', args.retry)
                     debug  = config.get('debug', False)
                     email = config.get('email',None)
                     slack = config.get('slack',None)
